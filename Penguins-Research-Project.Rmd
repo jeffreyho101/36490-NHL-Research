@@ -1,0 +1,754 @@
+### Data scraping from TSN Player Bio's
+
+```{r, messages=FALSE, warning=FALSE}
+library(jsonlite)
+library(ggplot2)
+
+# Penguin Players First
+Pens.roster <- fromJSON("~/Desktop/CMU/36-490/NHL-Research/Player-Data/Penguins-Data/Penguin-Roster-JSON")
+Pens.roster.names <- Pens.roster$LastName
+
+# extract all players' jsons, add first and last names
+astonreese.jsontable <- fromJSON("~/Desktop/CMU/36-490/NHL-Research/Player-Data/Penguins-Data/Aston-Reese-JSON")
+astonreese.first = rep("Zach", nrow(astonreese.jsontable))
+astonreese.jsontable$firstname = astonreese.first
+astonreese.last = rep("Aston-Reese", nrow(astonreese.jsontable))
+astonreese.jsontable$lastname = astonreese.last
+
+brassard.jsontable <- fromJSON("~/Desktop/CMU/36-490/NHL-Research/Player-Data/Penguins-Data/Brassard-JSON")
+brassard.first = rep("Derick", nrow(brassard.jsontable))
+brassard.jsontable$firstname = brassard.first
+brassard.last = rep("Brassard", nrow(brassard.jsontable))
+brassard.jsontable$lastname = brassard.last
+# delete irrelevant non-injury data (ie. acquisitions, negotiations, etc.)
+brassard.jsontable = brassard.jsontable[-c(1,4,11,12,13,18,21,28,31,32,33,34,35), ]
+
+cole.jsontable <- fromJSON("~/Desktop/CMU/36-490/NHL-Research/Player-Data/Penguins-Data/Cole-JSON")
+cole.first = rep("Ian", nrow(cole.jsontable))
+cole.jsontable$firstname = cole.first
+cole.last = rep("Cole", nrow(cole.jsontable))
+cole.jsontable$lastname = cole.last
+# delete irrelevant non-injury data (ie. acquisitions, negotiations, etc.)
+cole.jsontable = cole.jsontable[c(2,3,6,7,17,18), ]
+
+crosby.jsontable <- fromJSON("~/Desktop/CMU/36-490/NHL-Research/Player-Data/Penguins-Data/Crosby-JSON")
+crosby.first = rep("Sidney", nrow(crosby.jsontable))
+crosby.jsontable$firstname = crosby.first
+crosby.last = rep("Crosby", nrow(crosby.jsontable))
+crosby.jsontable$lastname = crosby.last
+# delete irrelevant non-injury data (ie. acquisitions, negotiations, etc.)
+crosby.jsontable = crosby.jsontable[-c(17, 37,42),]
+
+dumoulin.jsontable <- fromJSON("~/Desktop/CMU/36-490/NHL-Research/Player-Data/Penguins-Data/Dumoulin-JSON")
+dumoulin.first = rep("Brian", nrow(dumoulin.jsontable))
+dumoulin.jsontable$firstname = dumoulin.first
+dumoulin.last = rep("Dumoulin", nrow(dumoulin.jsontable))
+dumoulin.jsontable$lastname = dumoulin.last
+# delete irrelevant non-injury data (ie. acquisitions, negotiations, etc.)
+dumoulin.jsontable = dumoulin.jsontable[c(1,2,6,7,8,9),]
+
+guentzel.jsontable <- fromJSON("~/Desktop/CMU/36-490/NHL-Research/Player-Data/Penguins-Data/Guentzel-JSON")
+guentzel.first = rep("Jake", nrow(guentzel.jsontable))
+guentzel.jsontable$firstname = guentzel.first
+guentzel.last = rep("Guentzel", nrow(guentzel.jsontable))
+guentzel.jsontable$lastname = guentzel.last
+# delete irrelevant non-injury data (ie. acquisitions, negotiations, etc.)
+guentzel.jsontable = guentzel.jsontable[c(1,2),]
+
+
+hagelin.jsontable <- fromJSON("~/Desktop/CMU/36-490/NHL-Research/Player-Data/Penguins-Data/Hagelin-JSON")
+hagelin.first = rep("Carl", nrow(hagelin.jsontable))
+hagelin.jsontable$firstname = hagelin.first
+hagelin.last = rep("Hagelin", nrow(hagelin.jsontable))
+hagelin.jsontable$lastname = hagelin.last
+# delete irrelevant non-injury data (ie. acquisitions, negotiations, etc.)
+hagelin.jsontable = hagelin.jsontable[-c(12,13,14,17,18,19,22,23,24,25),]
+
+hornqvist.jsontable <- fromJSON("~/Desktop/CMU/36-490/NHL-Research/Player-Data/Penguins-Data/Hornqvist-JSON")
+hornqvist.first = rep("Patric", nrow(hornqvist.jsontable))
+hornqvist.jsontable$firstname = hornqvist.first
+hornqvist.last = rep("Hornqvist", nrow(hornqvist.jsontable))
+hornqvist.jsontable$lastname = hornqvist.last
+# delete irrelevant non-injury data (ie. acquisitions, negotiations, etc.)
+hornqvist.jsontable = hornqvist.jsontable[-c(21,28,37,38,39,47,52,53,54,55,56,57,58),]
+
+hunwick.jsontable <- fromJSON("~/Desktop/CMU/36-490/NHL-Research/Player-Data/Penguins-Data/Hunwick-JSON")
+hunwick.first = rep("Matt", nrow(hunwick.jsontable))
+hunwick.jsontable$firstname = hunwick.first
+hunwick.last = rep("Hunwick", nrow(hunwick.jsontable))
+hunwick.jsontable$lastname = hunwick.last
+# delete irrelevant non-injury data (ie. acquisitions, negotiations, etc.)
+hunwick.jsontable = hunwick.jsontable[-c(7,17,20,21,22,23,24,25,28,29,32,33,36,37,seq(40,51)),]
+
+
+jarry.jsontable <- fromJSON("~/Desktop/CMU/36-490/NHL-Research/Player-Data/Penguins-Data/Jarry-JSON")
+jarry.first = rep("Tristan", nrow(jarry.jsontable))
+jarry.jsontable$firstname = jarry.first
+jarry.last = rep("Jarry", nrow(jarry.jsontable))
+jarry.jsontable$lastname = jarry.last
+
+
+kessel.jsontable <- fromJSON("~/Desktop/CMU/36-490/NHL-Research/Player-Data/Penguins-Data/Kessel-JSON")
+kessel.first = rep("Phil", nrow(kessel.jsontable))
+kessel.jsontable$firstname = kessel.first
+kessel.last = rep("Kessel", nrow(kessel.jsontable))
+kessel.jsontable$lastname = kessel.last
+# delete irrelevant non-injury data (ie. acquisitions, negotiations, etc.)
+kessel.jsontable = kessel.jsontable[-c(1,2,4,5,13,14,16),]
+
+letang.jsontable <- fromJSON("~/Desktop/CMU/36-490/NHL-Research/Player-Data/Penguins-Data/Letang-JSON")
+letang.first = rep("Kris", nrow(letang.jsontable))
+letang.jsontable$firstname = letang.first
+letang.last = rep("Letang", nrow(letang.jsontable))
+letang.jsontable$lastname = letang.last
+# delete irrelevant non-injury data (ie. acquisitions, negotiations, etc.)
+letang.jsontable = letang.jsontable[-c(40,51,61,seq(71,74)),]
+
+maatta.jsontable <- fromJSON("~/Desktop/CMU/36-490/NHL-Research/Player-Data/Penguins-Data/Maatta-JSON")
+maatta.first = rep("Olli", nrow(maatta.jsontable))
+maatta.jsontable$firstname = maatta.first
+maatta.last = rep("Maatta", nrow(maatta.jsontable))
+maatta.jsontable$lastname = maatta.last
+# delete irrelevant non-injury data (ie. acquisitions, negotiations, etc.)
+maatta.jsontable = maatta.jsontable[-c(9,12,13,seq(21,23)),]
+
+malkin.jsontable <- fromJSON("~/Desktop/CMU/36-490/NHL-Research/Player-Data/Penguins-Data/Murray-JSON")
+malkin.first = rep("Evgeni", nrow(malkin.jsontable))
+malkin.jsontable$firstname = malkin.first
+malkin.last = rep("Malkin", nrow(malkin.jsontable))
+malkin.jsontable$lastname = malkin.last
+# delete irrelevant non-injury data (ie. acquisitions, negotiations, etc.)
+malkin.jsontable = malkin.jsontable[-c(12,seq(17,27)),]
+
+
+murray.jsontable <- fromJSON("~/Desktop/CMU/36-490/NHL-Research/Player-Data/Penguins-Data/Murray-JSON")
+murray.first = rep("Matt", nrow(murray.jsontable))
+murray.jsontable$firstname = murray.first
+murray.last = rep("Murray", nrow(murray.jsontable))
+murray.jsontable$lastname = murray.last
+# delete irrelevant non-injury data (ie. acquisitions, negotiations, etc.)
+murray.jsontable = murray.jsontable[-c(12,seq(17,27)),]
+
+
+oleksiak.jsontable <- fromJSON("~/Desktop/CMU/36-490/NHL-Research/Player-Data/Penguins-Data/Oleksiak-JSON")
+oleksiak.first = rep("Jamie", nrow(oleksiak.jsontable))
+oleksiak.jsontable$firstname = oleksiak.first
+oleksiak.last = rep("Oleksiak", nrow(oleksiak.jsontable))
+oleksiak.jsontable$lastname = oleksiak.last
+# delete irrelevant non-injury data (ie. acquisitions, negotiations, etc.)
+oleksiak.jsontable = oleksiak.jsontable[-c(seq(1,3), seq(13,38)),]
+
+
+reaves.jsontable <- fromJSON("~/Desktop/CMU/36-490/NHL-Research/Player-Data/Penguins-Data/Reaves-JSON")
+reaves.first = rep("Ryan", nrow(reaves.jsontable))
+reaves.jsontable$firstname = reaves.first
+reaves.last = rep("Reaves", nrow(reaves.jsontable))
+reaves.jsontable$lastname = reaves.last
+# delete irrelevant non-injury data (ie. acquisitions, negotiations, etc.)
+reaves.jsontable = reaves.jsontable[-c(1,8,12,13,seq(18,36)),]
+
+
+rowney.jsontable <- fromJSON("~/Desktop/CMU/36-490/NHL-Research/Player-Data/Penguins-Data/Rowney-JSON")
+rowney.first = rep("Carter", nrow(rowney.jsontable))
+rowney.jsontable$firstname = rowney.first
+rowney.last = rep("Rowney", nrow(rowney.jsontable))
+rowney.jsontable$lastname = rowney.last
+# delete irrelevant non-injury data (ie. acquisitions, negotiations, etc.)
+rowney.jsontable = rowney.jsontable[-c(seq(7,12)),]
+
+ruhwedel.jsontable <- fromJSON("~/Desktop/CMU/36-490/NHL-Research/Player-Data/Penguins-Data/Ruhwedel-JSON")
+ruhwedel.first = rep("Chad", nrow(ruhwedel.jsontable))
+ruhwedel.jsontable$firstname = ruhwedel.first
+ruhwedel.last = rep("Ruhwedel", nrow(ruhwedel.jsontable))
+ruhwedel.jsontable$lastname = ruhwedel.last
+# delete irrelevant non-injury data (ie. acquisitions, negotiations, etc.)
+ruhwedel.jsontable = ruhwedel.jsontable[-c(3,10,11,seq(14,31), seq(34,40)),]
+
+rust.jsontable <- fromJSON("~/Desktop/CMU/36-490/NHL-Research/Player-Data/Penguins-Data/Rust-JSON")
+rust.first = rep("Bryan", nrow(rust.jsontable))
+rust.jsontable$firstname = rust.first
+rust.last = rep("Rust", nrow(rust.jsontable))
+rust.jsontable$lastname = rust.last
+# delete irrelevant non-injury data (ie. acquisitions, negotiations, etc.)
+rust.jsontable = rust.jsontable[-c(seq(12,15),17,seq(20,29)),]
+
+
+schultz.jsontable <- fromJSON("~/Desktop/CMU/36-490/NHL-Research/Player-Data/Penguins-Data/Schultz-JSON")
+schultz.first = rep("Justin", nrow(schultz.jsontable))
+schultz.jsontable$firstname = schultz.first
+schultz.last = rep("Schultz", nrow(schultz.jsontable))
+schultz.jsontable$lastname = schultz.last
+# delete irrelevant non-injury data (ie. acquisitions, negotiations, etc.)
+schultz.jsontable = schultz.jsontable[-c(6,7,seq(12,14),17,seq(20,22), seq(26,28)),]
+
+sheahan.jsontable <- fromJSON("~/Desktop/CMU/36-490/NHL-Research/Player-Data/Penguins-Data/Sheahan-JSON")
+sheahan.first = rep("Riley", nrow(sheahan.jsontable))
+sheahan.jsontable$firstname = sheahan.first
+sheahan.last = rep("Sheahan", nrow(sheahan.jsontable))
+sheahan.jsontable$lastname = sheahan.last
+# delete irrelevant non-injury data (ie. acquisitions, negotiations, etc.)
+sheahan.jsontable = sheahan.jsontable[-c(1,4,seq(9,27)),]
+
+
+sheary.jsontable <- fromJSON("~/Desktop/CMU/36-490/NHL-Research/Player-Data/Penguins-Data/Sheary-JSON")
+sheary.first = rep("Conor", nrow(sheary.jsontable))
+sheary.jsontable$firstname = sheary.first
+sheary.last = rep("Sheary", nrow(sheary.jsontable))
+sheary.jsontable$lastname = sheary.last
+# delete irrelevant non-injury data (ie. acquisitions, negotiations, etc.)
+sheary.jsontable = sheary.jsontable[-c(seq(4,6), seq(15,28)),]
+
+simon.jsontable <- fromJSON("~/Desktop/CMU/36-490/NHL-Research/Player-Data/Penguins-Data/Simon-JSON")
+simon.first = rep("Dominik", nrow(simon.jsontable))
+simon.jsontable$firstname = simon.first
+simon.last = rep("Simon", nrow(simon.jsontable))
+simon.jsontable$lastname = simon.last
+# delete irrelevant non-injury data (ie. acquisitions, negotiations, etc.)
+simon.jsontable = simon.jsontable[c(3,4),]
+
+
+# merge all players' injury tables
+# not including becuase no injury data: astonreese, jarry
+# note: did not remove suspension/fines entries yet
+player.table = rbind(brassard.jsontable,cole.jsontable, crosby.jsontable, dumoulin.jsontable, guentzel.jsontable, hagelin.jsontable,hornqvist.jsontable,  hunwick.jsontable, kessel.jsontable, letang.jsontable,maatta.jsontable, malkin.jsontable,  murray.jsontable, oleksiak.jsontable, reaves.jsontable, rowney.jsontable, ruhwedel.jsontable,rust.jsontable,  schultz.jsontable, sheahan.jsontable, sheary.jsontable, simon.jsontable)
+
+# split date string into something usable
+player.table$year = substr(player.table$Date, 1, 4)
+player.table$month = substr(player.table$Date, 6, 7)
+player.table$day = substr(player.table$Date, 9,10)
+
+# get number of missed games
+games_missing = c()
+pattern="Missed (.*?) game"
+for (i in 1:nrow(player.table)){
+  gm = regmatches(player.table$Desc, regexec(pattern,player.table$Desc))[[i]][2]
+  games_missing = c(games_missing, gm)
+}
+
+
+# clean up edge cases
+games_missing[9] = 2
+games_missing[21] = 54
+games_missing[30] = 1
+games_missing[44] = 13
+games_missing[51] = 41
+games_missing[77] = 2
+games_missing[79] = 22
+games_missing[100] = 6
+games_missing[118] = 6
+games_missing[133] = 4
+games_missing[146] = 17
+games_missing[156] = 3
+games_missing[158] = 10
+games_missing[174] = 48
+games_missing[195] = 12
+games_missing[231] = 1
+games_missing[243] = 3
+games_missing[245] = 9
+games_missing[249] = 61
+games_missing[262] = 11
+games_missing[269] = 2
+games_missing[277] = 11
+games_missing[284] = 2
+games_missing[316] = 6
+games_missing[318] = 10
+games_missing[324] = 4
+games_missing[328] = 2
+games_missing[335] = 7
+games_missing[345] = 4
+games_missing[365] = 1
+gm = as.integer(games_missing)
+
+# add games missed to player data
+player.table$games.missed = gm
+
+# get injury
+injury = c()
+pattern="(.*?),"
+for (i in 1:nrow(player.table)){
+  inj = regmatches(player.table$Desc, regexec(pattern,player.table$Desc))[[i]][2]
+  injury = c(injury, inj)
+}
+
+
+player.table$injury = injury
+
+# remove those with suspensions
+regex = grepl("uspen", player.table$Desc)
+player.table = subset(player.table, regex==FALSE)
+
+index = c()
+for (a in 1:nrow(player.table)){
+  index = c(index, a)
+}
+player.table$index = index
+
+
+player.table = player.table[-c(23,24,25,46,51,79,80,90,91,118,121,124,141,166,169,172,177,186,195,198,201,210,213,220,229,230,232,231,243,260,275,282,285,286,291,298,301,320,327,328,339,340,343,352,359,360),]
+player.table$index = NULL
+
+
+# index = c()
+# for (a in 1:nrow(player.table)){
+#   index = c(index, a)
+# }
+# player.table$index = index
+
+nrow(player.table)
+for (count in 1:nrow(player.table)/2){
+  player.table$injury[2*count - 1] = player.table$injury[2*count]
+}
+player.table = player.table[-c(53,76),]
+
+player.table = player.table[-seq(2,316,by=2),]
+player.table$injury[player.table$injury == "Post concussion"] = "Concussion"
+player.table$injury[player.table$injury == "Broken right hand"] = "Broken hand"
+player.table$injury[player.table$injury == "Left hand injury"] = "Broken hand"
+player.table$injury[player.table$injury == "Right ankle injury"] = "Ankle injury"
+player.table$injury[player.table$injury == "Left shoulder surgery"] = "Shoulder surgery"
+player.table$injury[player.table$injury == "Sprained right ankle"] = "Ankle injury"
+player.table$injury[player.table$injury == "Bruised right shoulder"] = "Shoulder injury"
+
+ggplot(player.table) + 
+  geom_bar(aes(x=injury))   + theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(title="Frequency of Pittsburgh Penguins Players' Injuries", x = "Injury Type", y="Frequency")
+ggplot(player.table) + 
+  geom_bar(aes(x=year), fill="#57a0ff")   + theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(title="Frequency of Penguins Players' Injuries by Year", x = "Year", y="Frequency")
+
+write.csv(player.table, file = "~/Desktop/CMU/36-490/NHL-Research/Combined-Data/Pens-Combined.csv")
+
+inj = c()
+for (x in min(player.table$year):max(player.table$year)){
+  inj = c(inj,length(player.table[player.table$year == x, "lastname"]))
+}
+players_per_year = c(1,1,1,5,6,7,7,9,11,14,19,20, 20)
+years = seq(min(player.table$year),max(player.table$year))
+ggplot() + geom_point(aes(x = years, y = inj / players_per_year)) + 
+  labs(title="Average Number of Penguins Players' Injuries by Year", x = "Year", y = "Injuries per Year") 
+
+```
+
+
+
+```{r message=FALSE, warning=FALSE}
+library(dplyr)
+multmerge = function(path){
+  filenames=list.files(path=path, full.names=TRUE)
+  rbind_list(lapply(filenames, read.csv))
+}
+
+
+Avalanche = "~/Desktop/CMU/36-490/NHL-Research/Player-Data/Avalanche-Data"
+Blackhawks = "~/Desktop/CMU/36-490/NHL-Research/Player-Data/Blackhawks-Data"
+BlueJackets = "~/Desktop/CMU/36-490/NHL-Research/Player-Data/BlueJackets-Data"
+Blues = "~/Desktop/CMU/36-490/NHL-Research/Player-Data/Blues-Data"
+Bruins = "~/Desktop/CMU/36-490/NHL-Research/Player-Data/Bruins-Data"
+Canadiens = "~/Desktop/CMU/36-490/NHL-Research/Player-Data/Canadiens-Data"
+Canucks = "~/Desktop/CMU/36-490/NHL-Research/Player-Data/Canucks-Data"
+Capitals = "~/Desktop/CMU/36-490/NHL-Research/Player-Data/Capitals-Data"
+Coyotes = "~/Desktop/CMU/36-490/NHL-Research/Player-Data/Coyotes-Data"
+Devils = "~/Desktop/CMU/36-490/NHL-Research/Player-Data/Devils-Data"
+Ducks = "~/Desktop/CMU/36-490/NHL-Research/Player-Data/Ducks-Data"
+Flames = "~/Desktop/CMU/36-490/NHL-Research/Player-Data/Flames-Data"
+Flyers = "~/Desktop/CMU/36-490/NHL-Research/Player-Data/Flyers-Data"
+GoldenKnights = "~/Desktop/CMU/36-490/NHL-Research/Player-Data/GoldenKnights-Data"
+Hurricanes = "~/Desktop/CMU/36-490/NHL-Research/Player-Data/Hurricanes-Data"
+Islanders = "~/Desktop/CMU/36-490/NHL-Research/Player-Data/Islanders-Data"
+Jets = "~/Desktop/CMU/36-490/NHL-Research/Player-Data/Jets-Data"
+Kings = "~/Desktop/CMU/36-490/NHL-Research/Player-Data/Kings-Data"
+Lightning = "~/Desktop/CMU/36-490/NHL-Research/Player-Data/Lightning-Data"
+MapleLeafs = "~/Desktop/CMU/36-490/NHL-Research/Player-Data/MapleLeafs-Data"
+Oilers = "~/Desktop/CMU/36-490/NHL-Research/Player-Data/Oilers-Data"
+Panthers = "~/Desktop/CMU/36-490/NHL-Research/Player-Data/Panthers-Data"
+Penguins = "~/Desktop/CMU/36-490/NHL-Research/Player-Data/Penguins-Data"
+Predators = "~/Desktop/CMU/36-490/NHL-Research/Player-Data/Predators-Data"
+Rangers = "~/Desktop/CMU/36-490/NHL-Research/Player-Data/Rangers-Data"
+RedWings = "~/Desktop/CMU/36-490/NHL-Research/Player-Data/RedWings-Data"
+Sabres = "~/Desktop/CMU/36-490/NHL-Research/Player-Data/Sabres-Data"
+Senators = "~/Desktop/CMU/36-490/NHL-Research/Player-Data/Senators-Data"
+Sharks = "~/Desktop/CMU/36-490/NHL-Research/Player-Data/Sharks-Data"
+Stars = "~/Desktop/CMU/36-490/NHL-Research/Player-Data/Stars-Data"
+Wild = "~/Desktop/CMU/36-490/NHL-Research/Player-Data/Wild-Data"
+
+AvalancheData = multmerge(Avalanche)
+BlackhawksData=multmerge(Blackhawks)
+BlueJacketsData=multmerge(BlueJackets)
+BluesData=multmerge(Blues)
+BruinsData=multmerge(Bruins)
+CanadiensData=multmerge(Canadiens)
+CanucksData=multmerge(Canucks)
+CapitalsData=multmerge(Capitals)
+CoyotesData=multmerge(Coyotes)
+FlyersData=multmerge(Flyers)
+DevilsData=multmerge(Devils)
+FlamesData=multmerge(Bruins)
+DucksData=multmerge(Ducks)
+GoldenKnightsData=multmerge(GoldenKnights)
+HurricanesData=multmerge(Hurricanes)
+IslandersData=multmerge(Islanders)
+JetsData=multmerge(Jets)
+KingsData=multmerge(Kings)
+LightningData=multmerge(Lightning)
+MapleLeafsData=multmerge(MapleLeafs)
+OilersData=multmerge(Oilers)
+PanthersData=multmerge(Panthers)
+PenguinsData=multmerge(Penguins)
+PredatorsData=multmerge(Predators)
+RangersData=multmerge(Rangers)
+RedWingsData=multmerge(RedWings)
+SabresData=multmerge(Sabres)
+SenatorsData=multmerge(Senators)
+SharksData=multmerge(Sharks)
+StarsData=multmerge(Stars)
+WildData=multmerge(Wild)
+
+
+datalist = c(
+BlackhawksData,
+BlueJacketsData,
+BluesData,
+BruinsData,
+CanadiensData,
+CanucksData,
+CapitalsData,
+CoyotesData,
+FlyersData,
+DevilsData,
+FlamesData,
+DucksData,
+GoldenKnightsData,
+HurricanesData,
+IslandersData,
+JetsData,
+KingsData,
+LightningData,
+MapleLeafsData,
+OilersData,
+PanthersData,
+PenguinsData,
+PredatorsData,
+RangersData,
+RedWingsData,
+SabresData,
+SenatorsData,
+SharksData,
+StarsData,
+WildData)
+
+nhl.data = AvalancheData
+nhl.data = merge(nhl.data, BlackhawksData, all=TRUE)
+nhl.data = merge(nhl.data, BlueJacketsData, all=TRUE)
+nhl.data = merge(nhl.data, BluesData, all=TRUE)
+nhl.data = merge(nhl.data, BruinsData, all=TRUE)
+nhl.data = merge(nhl.data, CanadiensData, all=TRUE)
+nhl.data = merge(nhl.data, CanucksData, all=TRUE)
+nhl.data = merge(nhl.data, CapitalsData, all=TRUE)
+nhl.data = merge(nhl.data, CoyotesData, all=TRUE)
+nhl.data = merge(nhl.data, DevilsData, all=TRUE)
+nhl.data = merge(nhl.data, DucksData, all=TRUE)
+nhl.data = merge(nhl.data, FlamesData, all=TRUE)
+nhl.data = merge(nhl.data, FlyersData, all=TRUE)
+nhl.data = merge(nhl.data, GoldenKnightsData, all=TRUE)
+nhl.data = merge(nhl.data, HurricanesData, all=TRUE)
+nhl.data = merge(nhl.data, IslandersData, all=TRUE)
+nhl.data = merge(nhl.data, JetsData, all=TRUE)
+nhl.data = merge(nhl.data, KingsData, all=TRUE)
+nhl.data = merge(nhl.data, LightningData, all=TRUE)
+nhl.data = merge(nhl.data, MapleLeafsData, all=TRUE)
+nhl.data = merge(nhl.data, OilersData, all=TRUE)
+nhl.data = merge(nhl.data, PanthersData, all=TRUE)
+nhl.data = merge(nhl.data, PenguinsData, all=TRUE)
+nhl.data = merge(nhl.data, PredatorsData, all=TRUE)
+nhl.data = merge(nhl.data, RangersData, all=TRUE)
+nhl.data = merge(nhl.data, RedWingsData, all=TRUE)
+nhl.data = merge(nhl.data, SabresData, all=TRUE)
+nhl.data = merge(nhl.data, SenatorsData, all=TRUE)
+nhl.data = merge(nhl.data, SharksData, all=TRUE)
+nhl.data = merge(nhl.data, StarsData, all=TRUE)
+nhl.data = merge(nhl.data, WildData, all=TRUE)
+
+# get date info from string
+nhl.data$year = substr(nhl.data$Date, 9, 12)
+month = substr(nhl.data$Date, 1, 3)
+months <- c("Jan","Feb","Mar",
+              "Apr","May","Jun",
+              "Jul","Aug","Sep",
+              "Oct","Nov","Dec")
+
+for (mon in 1:length(months)){
+  month = replace(month, month==months[mon], mon)
+
+}
+nhl.data$month = as.integer(month)
+nhl.data$day = substr(nhl.data$Date, 5,6)
+
+# calculate number of injury games
+
+Numextract <- function(string){
+  unlist(regmatches(string,gregexpr("[[:digit:]]+\\.*[[:digit:]]*",string)))
+}
+
+for (i in 1:nrow(nhl.data)){
+  nhl.data$games.injured[i] = sum(as.numeric(Numextract(nhl.data$Injury[i])))
+
+}
+
+# change the names of all the team names that were parsed incorrectly
+city = nhl.data$City
+city = gsub("ST", "ST. LOUIS", city)
+city = gsub("SAN", "SAN JOSE", city)
+city = gsub("BOST. LOUISON", "BOSTON", city)
+city = gsub("NEW", "NEW YORK", city)
+city = gsub("TAMPA", "TAMPA BAY", city)
+city = gsub("LOS", "LOS ANGELES", city)
+nhl.data$City = city
+
+teamname = nhl.data$TeamName
+teamname = gsub("YORKRANGERS", "RANGERS", teamname)
+teamname = gsub("YORKISLANDERS", "ISLANDERS", teamname)
+teamname = gsub("JOSESHARKS", "SHARKS", teamname)
+teamname = gsub("LOUISBLUES", "BLUES", teamname)
+teamname = gsub("ANGELESKINGS", "KINGS", teamname)
+teamname = gsub("BAYLIGHTNING", "LIGHTNING", teamname)
+nhl.data$TeamName = teamname
+
+
+
+nhl.data = nhl.data[-grep("uspen|fined|Fined|igned|called|eturned|waiver|cq|offer|team|Team|oaned|isciplin|elect|elease|alary", nhl.data$Injury),]
+nhl.data = nhl.data[order(nhl.data$Team, nhl.data$Lastname, nhl.data$year, nhl.data$month, nhl.data$day),]
+# 
+# get injury type from the "Missed (n) games (injury type)"
+pattern="(.*?),"
+nhl.data$MissedGamesListing = grepl("Missed ", nhl.data$Injury)
+
+  library(stringr)
+nhl.data$InjuryType = sapply(unlist(nhl.data$Injury), function(j) gsub("[\\(\\)]", "", regmatches(j, gregexpr("\\(.*?\\)", j))[[1]]))
+nhl.data$InjuryType = lapply(nhl.data$InjuryType, function(x) if(identical(x, character(0))) NA_character_ else x)
+
+nhl.data$SeasonEnding = grepl("Missed the last", nhl.data$Injury)
+
+library(dplyr)
+# # add columns to see what the nth next data point is (ie. whether it contains the string "missed")
+nhl.data.v2$NextMissed1 = lead(nhl.data.v2$MissedGamesListing)
+nhl.data.v2$NextMissed2 = lead(nhl.data.v2$NextMissed1)
+nhl.data.v2$NextMissed3 = lead(nhl.data.v2$NextMissed2)
+nhl.data.v2$NextMissed4 = lead(nhl.data.v2$NextMissed3)
+nhl.data.v2$NextMissed5 = lead(nhl.data.v2$NextMissed4)
+nhl.data.v2$Index = seq(1,nrow(nhl.data.v2))
+
+test = 0
+duplicate.missed = rep(FALSE, nrow(nhl.data.v2) - 1)
+for(i in 1:nrow(nhl.data.v2)){
+  if(nhl.data.v2$MissedGamesListing[i] == TRUE && nhl.data.v2$NextMissed1[i] == TRUE){
+    duplicate.missed[i] = TRUE
+    test = test + 1
+    print(i)
+
+  }
+}
+
+#
+delete.duplicate = rep(0,nrow(nhl.data.v2))
+for(i in 1:nrow(nhl.data.v2)){
+  i = 1
+  # check if current data point is a missed game listing
+  if(delete.duplicate[i] != 0){
+    next
+  }
+  if(nhl.data.v2$MissedGamesListing[i]){
+    if(!is.na(nhl.data.v2$MissedGamesListing[i+1])){
+      # check if next row after missed is also missed - delete
+      if(nhl.data.v2$MissedGamesListing[i+1]){
+        delete.duplicate[i+1] = 1
+        #check listings after that, but offset by 1
+        if(!is.na(nhl.data.v2$MissedGamesListing[i+2])){
+          if(nhl.data.v2$MissedGamesListing[i+2]){
+            delete.duplicate[i+2] = 1
+          }
+        }
+        if(!is.na(nhl.data.v2$MissedGamesListing[i+3])){
+          if(!nhl.data.v2$MissedGamesListing[i+3]){
+            delete.duplicate[i+3] = 1
+          }
+        }
+        if(!is.na(nhl.data.v2$MissedGamesListing[i+4])){
+          if(!nhl.data.v2$MissedGamesListing[i+4]){
+            delete.duplicate[i+4] = 1
+          }
+        }
+        if(!is.na(nhl.data.v2$MissedGamesListing[i+5])){
+          if(!nhl.data.v2$MissedGamesListing[i+5]){
+            delete.duplicate[i+5] = 1
+          }
+        }
+      }
+      else{
+        if(!is.na(nhl.data.v2$MissedGamesListing[i+2])){
+          if(nhl.data.v2$MissedGamesListing[i+2]){
+            delete.duplicate[i+2] = 1
+          }
+        }
+        if(!is.na(nhl.data.v2$MissedGamesListing[i+3])){
+          if(nhl.data.v2$MissedGamesListing[i+3]){
+            delete.duplicate[i+3] = 1
+          }
+        }
+        if(!is.na(nhl.data.v2$MissedGamesListing[i+4])){
+          if(nhl.data.v2$MissedGamesListing[i+4]){
+            delete.duplicate[i+4] = 1
+          }
+        }
+        if(!is.na(nhl.data.v2$MissedGamesListing[i+5])){
+          if(nhl.data.v2$MissedGamesListing[i+5]){
+            delete.duplicate[i+5] = 1
+          }
+        }
+      }
+    }
+
+
+  }
+
+}
+
+### SUBSET THE CLEAN DATA HERE ###
+nhl.missed = subset(nhl.data.v2, MissedGamesListing==TRUE)
+
+length(table(unlist(nhl.data.v2$InjuryType)))
+
+#edge case for missed games: "missed the last regular season game"
+missedlastedgecasereg = grepl("Missed the last regular season|Missed the last game of the regular season", nhl.missed$Injury)
+missedlastedgecaseplay = grepl("first playoff game", nhl.missed$Injury)
+
+missedlastedgecasereg = replace(missedlastedgecasereg, missedlastedgecasereg==TRUE,1)
+missedlastedgecasereg = replace(missedlastedgecasereg, missedlastedgecasereg==FALSE,0)
+missedlastedgecaseplay = replace(missedlastedgecaseplay, missedlastedgecaseplay==TRUE,1)
+missedlastedgecaseplay = replace(missedlastedgecaseplay, missedlastedgecaseplay==FALSE,0)
+
+nhl.missed$games.injured = nhl.missed$games.injured + missedlastedgecasereg + missedlastedgecaseplay
+# edge case: "Missed the last game of the regular season and Game 1, 2 and 3 of Round One against the Toronto Maple Leafs (lower body injury)."
+nhl.data.v2$games.injured[7494] = 4
+nhl.missed$games.injured[3583] = 4
+nhl.missed$games.injured[1024] = 3
+nhl.missed$games.injured[2148] = 3
+# Missed Game 2 of Round One against the Dallas Stars (head injury).
+nhl.missed$games.injured[3196] = 1
+# Missed Game 3, 4 and 5 of the Eastern Conference Finals against the Pittsburgh Penguins (eye injury).
+nhl.missed$games.injured[2002] = 3
+# Missed Game 4 of Round Two against the Detroit Red Wings (knee injury).
+nhl.missed$games.injured[1848] = 1
+# Missed Game 4 of the Stanley Cup Finals against the Ottawa Senators (abdominal injury).
+nhl.missed$games.injured[2062] = 1
+# Missed Game 5, 6 and 7 of Round One against the Vancouver Canucks (upper body injury).
+nhl.missed$games.injured[772] = 3
+# Missed Game 6 and 7 of Round Two against Toronto (knee injury).
+nhl.missed$games.injured[495] = 2
+# Missed Game 6 and 7 of Round Two against Toronto (back injury).
+nhl.missed$games.injured[2680] = 2
+# Missed all 4 games of Round 2 against the Colorado Avalanche and Game 1 of the Conference Final against the Edmonton Oilers (knee injury).
+nhl.missed$games.injured[1154] = 5
+#H1N1 cases
+nhl.missed$games.injured[531] = 2
+nhl.missed$games.injured[3118] = 1
+# Missed all 4 games of Round 2 against the Colorado Avalanche and Game 1 of the Conference Final against the Edmonton Oilers (knee injury).
+nhl.missed$games.injured[1154] = 5
+# Missed 5 games of the Western Conference Finals against the Detroit Red Wings and games 1 and 2 of the Stanley Cup Finals against the Ottawa Senators (broken right hand).
+nhl.missed$games.injured[2061] = 7
+# remove rows with visa issues as listed reason for missing games
+nhl.missed = nhl.missed[-grep("visa issues", nhl.missed$Injury),]
+
+# remove all rows with "personal" listed as injury
+nhl.missed = nhl.missed[-grep("personal", nhl.missed$Injury),]
+
+
+# categorize general injuries
+nhl.missed$GeneralInjury = nhl.missed$InjuryType
+nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("eye|orbital", nhl.missed$GeneralInjury), "eye")
+nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("head", nhl.missed$GeneralInjury), "head")
+nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("face|nose|nasal|cheek|facial", nhl.missed$GeneralInjury), "face")
+nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("mouth|jaw|oral", nhl.missed$GeneralInjury), "hand")
+nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("neck", nhl.missed$GeneralInjury), "neck")
+
+nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("shoulder", nhl.missed$GeneralInjury), "shoulder")
+nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("upper body|torso", nhl.missed$GeneralInjury), "upper body")
+nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("hand", nhl.missed$GeneralInjury), "hand")
+nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("finger|thumb|knuckle", nhl.missed$GeneralInjury), "finger")
+nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("elbow", nhl.missed$GeneralInjury), "elbow")
+nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("bicep|tricep|muscle", nhl.missed$GeneralInjury), "muscle")
+
+nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("wrist", nhl.missed$GeneralInjury), "wrist")
+nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("arm", nhl.missed$GeneralInjury), "arm")
+nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("back|sacrum", nhl.missed$GeneralInjury), "back")
+nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("collarbone|collar bone|clavicle", nhl.missed$GeneralInjury), "collarbone")
+
+nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("chest|stern", nhl.missed$GeneralInjury), "chest")
+nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("abdom|oblique", nhl.missed$GeneralInjury), "abdominal")
+nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("hip", nhl.missed$GeneralInjury), "hip")
+nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("rib", nhl.missed$GeneralInjury), "rib")
+
+nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("lower body", nhl.missed$GeneralInjury), "lower body")
+nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("knee|ACL|MCL|acl|mcl", nhl.missed$GeneralInjury), "knee")
+nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("sick|flu|cold|virus|H1N1|viral|pneumonia|mono|throat|sinus|illness|food|poison|mumps|rash|leukemia", nhl.missed$GeneralInjury), "cold/virus")
+nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("leg|shin", nhl.missed$GeneralInjury), "leg")
+nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("quad", nhl.missed$GeneralInjury), "quad")
+nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("calf|calves|charley horse", nhl.missed$GeneralInjury), "calf")
+nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("thigh", nhl.missed$GeneralInjury), "thigh")
+nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("groin|cervi", nhl.missed$GeneralInjury), "groin")
+nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("hamstring", nhl.missed$GeneralInjury), "hamstring")
+nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("tibia|fibula", nhl.missed$GeneralInjury), "tibia/fibula")
+
+
+nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("foot|heel", nhl.missed$GeneralInjury), "foot")
+nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("toe", nhl.missed$GeneralInjury), "toe")
+nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("ankle", nhl.missed$GeneralInjury), "ankle")
+nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("achilles", nhl.missed$GeneralInjury), "achilles")
+
+
+nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("personal", nhl.missed$GeneralInjury), "personal")
+nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("concussion|consussion", nhl.missed$GeneralInjury), "concussion")
+nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("pect", nhl.missed$GeneralInjury), "pectoral")
+nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("append", nhl.missed$GeneralInjury), "appendicitis")
+nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("heart|colon|stomach", nhl.missed$GeneralInjury), "internals")
+nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("sore", nhl.missed$GeneralInjury), "sore")
+nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("hernia", nhl.missed$GeneralInjury), "hernia")
+nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("spleen", nhl.missed$GeneralInjury), "spleen")
+nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("tailbone", nhl.missed$GeneralInjury), "tailbone")
+
+
+nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("various|blood clots|dizzy|cyst|dehydration", nhl.missed$GeneralInjury), "other")
+
+
+#reduce number of injury types even more (for visulization purposes)
+nhl.missed$ReducedInjuryTypes = nhl.missed$GeneralInjury
+nhl.missed$ReducedInjuryTypes = replace(nhl.missed$ReducedInjuryTypes, grep("face|head|neck|ear|eye", nhl.missed$ReducedInjuryTypes), "head/neck/face")
+nhl.missed$ReducedInjuryTypes = replace(nhl.missed$ReducedInjuryTypes, grep("upper|shoulder", nhl.missed$ReducedInjuryTypes), "upper body")
+nhl.missed$ReducedInjuryTypes = replace(nhl.missed$ReducedInjuryTypes, grep("abdominal|back|chest|collarbone|mid|spleen|rib", nhl.missed$ReducedInjuryTypes), "mid body")
+nhl.missed$ReducedInjuryTypes = replace(nhl.missed$ReducedInjuryTypes, grep("groin|tailbone|hip|lower", nhl.missed$ReducedInjuryTypes), "lower body")
+nhl.missed$ReducedInjuryTypes = replace(nhl.missed$ReducedInjuryTypes, grep("arm|hand|wrist|finger|elbow", nhl.missed$ReducedInjuryTypes), "arm/hand")
+nhl.missed$ReducedInjuryTypes = replace(nhl.missed$ReducedInjuryTypes, grep("tailbone|calf|knee|leg|tibia/fibula|thigh|hamstring|quad", nhl.missed$ReducedInjuryTypes), "leg")
+nhl.missed$ReducedInjuryTypes = replace(nhl.missed$ReducedInjuryTypes, grep("achilles|ankle", nhl.missed$ReducedInjuryTypes), "foot")
+
+nhl.missed$ReducedInjuryTypes = replace(nhl.missed$ReducedInjuryTypes, grep("cold/virus|illness", nhl.missed$ReducedInjuryTypes), "illness")
+nhl.missed$ReducedInjuryTypes = replace(nhl.missed$ReducedInjuryTypes, grep("concussion", nhl.missed$ReducedInjuryTypes), "concussion")
+nhl.missed$ReducedInjuryTypes = replace(nhl.missed$ReducedInjuryTypes, grep("append|hernia|internals|muscle|other|hernia|thyroid|other|unknown|sore|rest|personal", nhl.missed$ReducedInjuryTypes), "other")
+
+# unreduced injuries by team
+library(ggplot2)
+ggplot(data=na.omit(nhl.missed), aes(x = TeamName, fill=unlist(GeneralInjury))) + geom_bar() + theme(axis.text.x = element_text(angle = 45, hjust = 1, size=6)) + labs(title="Frequency of Tyes of Injuries per NHL Team",x = "Team", y = "Frequency")
+ggplot(data=na.omit(nhl.missed), aes(x = TeamName, fill=unlist(ReducedInjuryTypes))) + geom_bar() + theme(axis.text.x = element_text(angle = 45, hjust = 1, size=6)) + labs(title="Frequency of Tyes of Injuries per NHL Team",x = "Team", y = "Frequency") + scale_fill_discrete("Injury Type")
+
+```
+
+1559 - ""
+dplyr:
+- lead(df, var, )
+- lag()
+
+EDA:
+- dist. of games/days missed
+- dist of days/games missed conditioned on injury typed
+- conditioned on team
+
+df = df %/% group_by(player_id) %>% arrange(inj.date) %>% 
+  mutate(last_inj = lag(inj_data, 1), last_inj_type = lag(inj_type, 1),  next_inj_type = lead(inj_type, 1), ...)
