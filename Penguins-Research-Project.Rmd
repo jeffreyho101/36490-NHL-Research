@@ -1,4 +1,4 @@
-### Data scraping from TSN Player Bio's
+### Data scraping from TSN Player Bio's (OLD - DIDN'T SCRAPE ALL DATA IN 1ST CODE CHUNK)
 
 ```{r, messages=FALSE, warning=FALSE}
 library(jsonlite)
@@ -332,11 +332,6 @@ ggplot() + geom_point(aes(x = years, y = inj / players_per_year)) +
 
 
 ```{r message=FALSE, warning=FALSE}
-library(dplyr)
-multmerge = function(path){
-  filenames=list.files(path=path, full.names=TRUE)
-  rbind_list(lapply(filenames, read.csv))
-}
 
 
 Avalanche = "~/Desktop/CMU/36-490/NHL-Research/Player-Data/Avalanche-Data"
@@ -370,6 +365,12 @@ Senators = "~/Desktop/CMU/36-490/NHL-Research/Player-Data/Senators-Data"
 Sharks = "~/Desktop/CMU/36-490/NHL-Research/Player-Data/Sharks-Data"
 Stars = "~/Desktop/CMU/36-490/NHL-Research/Player-Data/Stars-Data"
 Wild = "~/Desktop/CMU/36-490/NHL-Research/Player-Data/Wild-Data"
+
+library(dplyr)
+multmerge = function(path){
+  filenames=list.files(path=path, full.names=TRUE)
+  rbind_list(lapply(filenames, read.csv))
+}
 
 AvalancheData = multmerge(Avalanche)
 BlackhawksData=multmerge(Blackhawks)
@@ -528,217 +529,580 @@ nhl.data$InjuryType = lapply(nhl.data$InjuryType, function(x) if(identical(x, ch
 
 nhl.data$SeasonEnding = grepl("Missed the last", nhl.data$Injury)
 
-library(dplyr)
-# # add columns to see what the nth next data point is (ie. whether it contains the string "missed")
-nhl.data.v2$NextMissed1 = lead(nhl.data.v2$MissedGamesListing)
-nhl.data.v2$NextMissed2 = lead(nhl.data.v2$NextMissed1)
-nhl.data.v2$NextMissed3 = lead(nhl.data.v2$NextMissed2)
-nhl.data.v2$NextMissed4 = lead(nhl.data.v2$NextMissed3)
-nhl.data.v2$NextMissed5 = lead(nhl.data.v2$NextMissed4)
-nhl.data.v2$Index = seq(1,nrow(nhl.data.v2))
 
-test = 0
-duplicate.missed = rep(FALSE, nrow(nhl.data.v2) - 1)
-for(i in 1:nrow(nhl.data.v2)){
-  if(nhl.data.v2$MissedGamesListing[i] == TRUE && nhl.data.v2$NextMissed1[i] == TRUE){
-    duplicate.missed[i] = TRUE
-    test = test + 1
-    print(i)
+nhl.data$Index = seq(1,nrow(nhl.data))
 
-  }
+# test = 0
+# duplicate.missed = rep(FALSE, nrow(nhl.data) - 1)
+# for(i in 1:nrow(nhl.data)){
+#   if(nhl.data$MissedGamesListing[i] == TRUE && nhl.data$NextMissed1[i] == TRUE){
+#     duplicate.missed[i] = TRUE
+#     test = test + 1
+#     print(i)
+# 
+#   }
+# }
+
+
+
+# delete missed entries that dont have another row which states start of injury date or are extraineous
+nhl.data = nhl.data[-c(127, 1753, 1848,1849, 1962, 2305, 2306, 2668, 2788, seq(3111,3114), 3324, 3394,3395, 5265,5266, 5401,5402, 5450, 5777, 7052, 7506,7507, 7552, 8052, 8076),]
+
+
+# delete training camp entries
+nhl.data = nhl.data[-grep("training camp", nhl.data$Injury),]
+
+for(i in 1:nrow(nhl.data)){
+  nhl.data$Index[i] = i
 }
 
-#
-delete.duplicate = rep(0,nrow(nhl.data.v2))
-for(i in 1:nrow(nhl.data.v2)){
-  i = 1
+
+
+# duplicate.missed = rep(FALSE, nrow(nhl.data) - 1)
+# for(i in 1:nrow(nhl.data)){
+#   if(nhl.data$MissedGamesListing[i] == TRUE && nhl.data$NextMissed1[i] == TRUE){
+#     duplicate.missed[i] = TRUE
+#     test = test + 1
+#     print(i)
+# 
+#   }
+# }
+
+# additional duplicate response deleted
+nhl.data = nhl.data[-5361,]
+
+delete.duplicate = rep(0,nrow(nhl.data))
+for(i in 1:nrow(nhl.data)){
   # check if current data point is a missed game listing
   if(delete.duplicate[i] != 0){
     next
   }
-  if(nhl.data.v2$MissedGamesListing[i]){
-    if(!is.na(nhl.data.v2$MissedGamesListing[i+1])){
-      # check if next row after missed is also missed - delete
-      if(nhl.data.v2$MissedGamesListing[i+1]){
-        delete.duplicate[i+1] = 1
-        #check listings after that, but offset by 1
-        if(!is.na(nhl.data.v2$MissedGamesListing[i+2])){
-          if(nhl.data.v2$MissedGamesListing[i+2]){
-            delete.duplicate[i+2] = 1
-          }
-        }
-        if(!is.na(nhl.data.v2$MissedGamesListing[i+3])){
-          if(!nhl.data.v2$MissedGamesListing[i+3]){
-            delete.duplicate[i+3] = 1
-          }
-        }
-        if(!is.na(nhl.data.v2$MissedGamesListing[i+4])){
-          if(!nhl.data.v2$MissedGamesListing[i+4]){
-            delete.duplicate[i+4] = 1
-          }
-        }
-        if(!is.na(nhl.data.v2$MissedGamesListing[i+5])){
-          if(!nhl.data.v2$MissedGamesListing[i+5]){
-            delete.duplicate[i+5] = 1
-          }
-        }
-      }
-      else{
-        if(!is.na(nhl.data.v2$MissedGamesListing[i+2])){
-          if(nhl.data.v2$MissedGamesListing[i+2]){
-            delete.duplicate[i+2] = 1
-          }
-        }
-        if(!is.na(nhl.data.v2$MissedGamesListing[i+3])){
-          if(nhl.data.v2$MissedGamesListing[i+3]){
-            delete.duplicate[i+3] = 1
-          }
-        }
-        if(!is.na(nhl.data.v2$MissedGamesListing[i+4])){
-          if(nhl.data.v2$MissedGamesListing[i+4]){
-            delete.duplicate[i+4] = 1
-          }
-        }
-        if(!is.na(nhl.data.v2$MissedGamesListing[i+5])){
-          if(nhl.data.v2$MissedGamesListing[i+5]){
-            delete.duplicate[i+5] = 1
-          }
-        }
-      }
-    }
-
-
+  # skip if line is Missed line
+  if(nhl.data$MissedGamesListing[i] == TRUE){
+    next
   }
+  # delete duplicate litings since we just want start injury date (these are not Missed lines)
+  else{
+    next.entry = i+1
+    while(nhl.data$MissedGamesListing[next.entry] == FALSE){
+      delete.duplicate[next.entry] = 1
+      next.entry = next.entry + 1
+    }
+  }
+}
+nhl.data$delete.duplicate = delete.duplicate
 
+
+nhl.data = nhl.data[-which(delete.duplicate != 0),]
+
+
+
+for(i in 1:nrow(nhl.data)){
+  nhl.data$Index[i] = i
 }
 
-### SUBSET THE CLEAN DATA HERE ###
-nhl.missed = subset(nhl.data.v2, MissedGamesListing==TRUE)
+nhl.data$MissedGamesListing = grepl("Missed ", nhl.data$Injury)
+# 
+# duplicate.missed = rep(FALSE, nrow(nhl.data) - 1)
+# for(i in 1:nrow(nhl.data)){
+#   if(nhl.data$MissedGamesListing[i] == TRUE && nhl.data$NextMissed1[i] == TRUE){
+#     duplicate.missed[i] = TRUE
+#     test = test + 1
+#     print(i)
+# 
+#   }
+# }
 
-length(table(unlist(nhl.data.v2$InjuryType)))
+
+# reparse the start injury dates
+injend.month = nhl.data$month
+injend.day = nhl.data$day
+injend.year = nhl.data$year
+injstart.month = nhl.data$month
+injstart.day = nhl.data$day
+injstart.year = nhl.data$year
+
+
+for(i in seq(from=2, to=nrow(nhl.data), by=2)){
+  injstart.month[i] = injstart.month[i-1]
+  injstart.day[i] = injstart.day[i-1]
+  injstart.year[i] = injstart.year[i-1]
+}
+
+# replace with correct date entries
+nhl.data$month = NULL
+nhl.data$day = NULL
+nhl.data$year = NULL
+
+nhl.data$injstart.month = injstart.month
+nhl.data$injstart.day = injstart.day
+nhl.data$injstart.year = injstart.year
+nhl.data$injend.month = injend.month
+nhl.data$injend.day = injend.day
+nhl.data$injend.year = injend.year
+
+# edge cases parsing on year
+
+
+for(i in 1:nrow(nhl.data.clean1)){
+  nhl.data.clean1$Index[i] = i
+}
+
+
+nhl.data.clean1 = nhl.data[seq(2,nrow(nhl.data), by=2),]
+
+nhl.data.clean1$injstart.month[1] = 1
+nhl.data.clean1$injstart.day[1] = 11
+nhl.data.clean1$injstart.year[1] = 2014
+
+nhl.data.clean1$injstart.month[40] = 10
+nhl.data.clean1$injstart.day[40] = 13
+nhl.data.clean1$injstart.year[40] = 2017
+
+nhl.data.clean1$injstart.month[168] = 3
+nhl.data.clean1$injstart.day[168] = 17
+nhl.data.clean1$injstart.year[168] = 2014
+
+nhl.data.clean1$injstart.month[208] = 1
+nhl.data.clean1$injstart.day[208] = 24
+nhl.data.clean1$injstart.year[208] = 2013
+
+nhl.data.clean1$injstart.month[347] = 4
+nhl.data.clean1$injstart.day[347] = 3
+nhl.data.clean1$injstart.year[347] = 2017
+
+nhl.data.clean1$injstart.month[536] = 4
+nhl.data.clean1$injstart.day[536] = 10
+nhl.data.clean1$injstart.year[536] = 2017
+
+nhl.data.clean1$injstart.month[536] = 4
+nhl.data.clean1$injstart.day[536] = 10
+nhl.data.clean1$injstart.year[536] = 2017
+
+
+nhl.data.clean1$injstart.month[740] = 10
+nhl.data.clean1$injstart.day[740] = 3
+nhl.data.clean1$injstart.year[740] = 2017
+
+nhl.data.clean1$injstart.month[743] = 2
+nhl.data.clean1$injstart.day[743] = 3
+nhl.data.clean1$injstart.year[743] = 2010
+
+
+nhl.data.clean1$injstart.month[754-1] = 4
+nhl.data.clean1$injstart.day[754-1] = 1
+nhl.data.clean1$injstart.year[754-1] = 2012
+
+nhl.data.clean1$injstart.month[825-1] = 3
+nhl.data.clean1$injstart.day[825-1] = 9
+nhl.data.clean1$injstart.year[825-1] = 2017
+
+nhl.data.clean1$injstart.month[1115-1] = 4
+nhl.data.clean1$injstart.day[1115-1] = 5
+nhl.data.clean1$injstart.year[1115-1] = 2007
+
+nhl.data.clean1$injstart.month[1184-1] = 11
+nhl.data.clean1$injstart.day[1184-1] = 4
+nhl.data.clean1$injstart.year[1184-1] = 2014
+
+nhl.data.clean1$injstart.month[1283-1] = 12
+nhl.data.clean1$injstart.day[1283-1] = 19
+nhl.data.clean1$injstart.year[1283-1] = 2011
+
+nhl.data.clean1$injstart.month[1433-1] = 12
+nhl.data.clean1$injstart.day[1433-1] = 5
+nhl.data.clean1$injstart.year[1433-1] = 2016
+
+nhl.data.clean1$injstart.month[1468-1] = 1
+nhl.data.clean1$injstart.day[1468-1] = 8
+nhl.data.clean1$injstart.year[1468-1] = 2018
+
+nhl.data.clean1$injstart.month[1493-1] = 3
+nhl.data.clean1$injstart.day[1493-1] = 2
+nhl.data.clean1$injstart.year[1493-1] = 2016
+
+nhl.data.clean1$injstart.month[1494-1] = 12
+nhl.data.clean1$injstart.day[1494-1] = 28
+nhl.data.clean1$injstart.year[1494-1] = 2016
+
+nhl.data.clean1$injstart.month[1523-1] = 1
+nhl.data.clean1$injstart.day[1523-1] = 15
+nhl.data.clean1$injstart.year[1523-1] = 2016
+
+nhl.data.clean1$injstart.month[1636-1] = 10
+nhl.data.clean1$injstart.day[1636-1] = 13
+nhl.data.clean1$injstart.year[1636-1] = 2009
+
+
+nhl.data.clean1$injstart.month[1678-1] = 2
+nhl.data.clean1$injstart.day[1678-1] = 5
+nhl.data.clean1$injstart.year[1678-1] = 2018
+
+nhl.data.clean1$injstart.month[1940-1] = 10
+nhl.data.clean1$injstart.day[1940-1] = 27
+nhl.data.clean1$injstart.year[1940-1] = 2009
+
+nhl.data.clean1$injstart.month[2143-1] = 11
+nhl.data.clean1$injstart.day[2143-1] = 3
+nhl.data.clean1$injstart.year[2143-1] = 2016
+
+nhl.data.clean1$injstart.month[2263-1] = 11
+nhl.data.clean1$injstart.day[2263-1] = 12
+nhl.data.clean1$injstart.year[2263-1] = 2006
+
+nhl.data.clean1$injstart.month[2289-1] = 3
+nhl.data.clean1$injstart.day[2289-1] = 14
+nhl.data.clean1$injstart.year[2289-1] = 2013
+
+nhl.data.clean1$injstart.month[2512-1] = 11
+nhl.data.clean1$injstart.day[2512-1] = 24
+nhl.data.clean1$injstart.year[2512-1] = 2007
+
+nhl.data.clean1$injstart.month[2660-1] = 10
+nhl.data.clean1$injstart.day[2660-1] = 7
+nhl.data.clean1$injstart.year[2660-1] = 2017
+
+nhl.data.clean1$injstart.month[2718-1] = 12
+nhl.data.clean1$injstart.day[2718-1] = 19
+nhl.data.clean1$injstart.year[2718-1] = 2008
+
+nhl.data.clean1$injstart.month[2864-1] = 10
+nhl.data.clean1$injstart.day[2864-1] = 13
+nhl.data.clean1$injstart.year[2864-1] = 2016
+
+nhl.data.clean1$injstart.month[2973-1] = 10
+nhl.data.clean1$injstart.day[2973-1] = 3
+nhl.data.clean1$injstart.year[2973-1] = 2013
+
+nhl.data.clean1$injstart.month[3280-1] = 1
+nhl.data.clean1$injstart.day[3280-1] = 22
+nhl.data.clean1$injstart.year[3280-1] = 2004
+
+nhl.data.clean1$injstart.month[3460-1] = 1
+nhl.data.clean1$injstart.day[3460-1] = 4
+nhl.data.clean1$injstart.year[3460-1] = 2011
+
+nhl.data.clean1$injstart.month[3573-1] = 10
+nhl.data.clean1$injstart.day[3573-1] = 9
+nhl.data.clean1$injstart.year[3573-1] = 2017
+
+nhl.data.clean1$injstart.month[3689-1] = 10
+nhl.data.clean1$injstart.day[3689-1] = 7
+nhl.data.clean1$injstart.year[3689-1] = 2014
+
+nhl.data.clean1$injstart.month[3860-1] = 12
+nhl.data.clean1$injstart.day[3860-1] = 7
+nhl.data.clean1$injstart.year[3860-1] = 2016
+
+nhl.data.clean1$injstart.month[3434] = 10
+nhl.data.clean1$injstart.day[3434] = 13
+nhl.data.clean1$injstart.year[3434] = 2010
+
+nhl.data.clean1$injstart.month[574] = 10
+nhl.data.clean1$injstart.day[574] = 14
+nhl.data.clean1$injstart.year[574] = 2013
+
+nhl.data.clean1$injstart.month[1496] = 2
+nhl.data.clean1$injstart.day[1496] = 17
+nhl.data.clean1$injstart.year[1496] = 2018
+
+nhl.data.clean1$injstart.month[1066] = 10
+nhl.data.clean1$injstart.day[1066] = 11
+nhl.data.clean1$injstart.year[1066] = 2017
+
+nhl.data.clean1$injstart.month[578] = 10
+nhl.data.clean1$injstart.day[578] = 5
+nhl.data.clean1$injstart.year[578] = 2009
+
+nhl.data.clean1$injstart.month[3197] = 5
+nhl.data.clean1$injstart.day[3197] = 27
+nhl.data.clean1$injstart.year[3197] = 2009
+
+nhl.data.clean1$injstart.month[1578] = 12
+nhl.data.clean1$injstart.day[1578] = 21
+nhl.data.clean1$injstart.year[1578] = 2007
+
+nhl.data.clean1$injstart.month[3005] = 3
+nhl.data.clean1$injstart.day[3005] = 10
+nhl.data.clean1$injstart.year[3005] = 2009
+
+nhl.data.clean1$injstart.month[3076] = 3
+nhl.data.clean1$injstart.day[3076] = 13
+nhl.data.clean1$injstart.year[3076] = 2012
+
+nhl.data.clean1$injstart.month[1042] = 12
+nhl.data.clean1$injstart.day[1042] = 18
+nhl.data.clean1$injstart.year[1042] = 2009
+
+nhl.data.clean1$injstart.month[1032] = 1
+nhl.data.clean1$injstart.day[1032] = 4
+nhl.data.clean1$injstart.year[1032] = 2016
+
+nhl.data.clean1$injstart.month[95] = 1
+nhl.data.clean1$injstart.day[95] = 7
+nhl.data.clean1$injstart.year[95] = 2012
+
+nhl.data.clean1$injstart.month[2788] = 1
+nhl.data.clean1$injstart.day[2788] = 12
+nhl.data.clean1$injstart.year[2788] = 2009
+
+nhl.data.clean1$injstart.month[3668] = 12
+nhl.data.clean1$injstart.day[3668] = 7
+nhl.data.clean1$injstart.year[3668] = 2008
+
+nhl.data.clean1$injstart.month[2125] = 6
+nhl.data.clean1$injstart.day[2125] = 2
+nhl.data.clean1$injstart.year[2125] = 2013
+
+nhl.data.clean1$injstart.month[1290] = 3
+nhl.data.clean1$injstart.day[1290] = 19
+nhl.data.clean1$injstart.year[1290] = 2008
+
+nhl.data.clean1$injstart.month[236] = 2
+nhl.data.clean1$injstart.day[236] = 25
+nhl.data.clean1$injstart.year[236] = 2011
+
+nhl.data.clean1$injstart.month[3873] = 12
+nhl.data.clean1$injstart.day[3873] = 8
+nhl.data.clean1$injstart.year[3873] = 2010
+
+nhl.data.clean1$injstart.month[3802] = 1
+nhl.data.clean1$injstart.day[3802] = 2
+nhl.data.clean1$injstart.year[3802] = 2018
+
+nhl.data.clean1$injstart.month[3380] = 10
+nhl.data.clean1$injstart.day[3380] = 22
+nhl.data.clean1$injstart.year[3380] = 2011
+
+nhl.data.clean1$injstart.month[3871] = 11
+nhl.data.clean1$injstart.day[3871] = 1
+nhl.data.clean1$injstart.year[3871] = 2008
+
+nhl.data.clean1$injstart.month[2998] = 10
+nhl.data.clean1$injstart.day[2998] = 2
+nhl.data.clean1$injstart.year[2998] = 2011
+
+nhl.data.clean1$injstart.month[16] = 4
+nhl.data.clean1$injstart.day[16] = 12
+nhl.data.clean1$injstart.year[16] = 2009
+
+nhl.data.clean1$injstart.month[3691] = 11
+nhl.data.clean1$injstart.day[3691] = 2
+nhl.data.clean1$injstart.year[3691] = 2008
+
+nhl.data.clean1$injstart.month[3311] = 1
+nhl.data.clean1$injstart.day[3311] = 6
+nhl.data.clean1$injstart.year[3311] = 2011
+
+nhl.data.clean1$injstart.month[806] = 11
+nhl.data.clean1$injstart.day[806] = 10
+nhl.data.clean1$injstart.year[806] = 2008
+
+nhl.data.clean1$injstart.month[2995] = 10
+nhl.data.clean1$injstart.day[2995] = 24
+nhl.data.clean1$injstart.year[2995] = 2015
+
+nhl.data.clean1$injstart.month[1412] = 11
+nhl.data.clean1$injstart.day[1412] = 17
+nhl.data.clean1$injstart.year[1412] = 2008
+
+nhl.data.clean1$injstart.month[2355] = 1
+nhl.data.clean1$injstart.day[2355] = 18
+nhl.data.clean1$injstart.year[2355] = 2008
+
+nhl.data.clean1$injstart.month[2995] = 10
+nhl.data.clean1$injstart.day[2995] = 24
+nhl.data.clean1$injstart.year[2995] = 2015
+
+nhl.data.clean1$injstart.month[2397] = 12
+nhl.data.clean1$injstart.day[2397] = 14
+nhl.data.clean1$injstart.year[2397] = 2013
+
+nhl.data.clean1$injstart.month[2733] = 1
+nhl.data.clean1$injstart.day[2733] = 16
+nhl.data.clean1$injstart.year[2733] = 2009
+
+nhl.data.clean1$injstart.month[2206] = 11
+nhl.data.clean1$injstart.day[2206] = 27
+nhl.data.clean1$injstart.year[2206] = 2016
+
+nhl.data.clean1$injstart.month[2219] = 1
+nhl.data.clean1$injstart.day[2219] = 9
+nhl.data.clean1$injstart.year[2219] = 2018
+
+nhl.data.clean1$injstart.month[512] = 10
+nhl.data.clean1$injstart.day[512] = 30
+nhl.data.clean1$injstart.year[512] = 2014
+
+nhl.data.clean1$injstart.month[70] = 4
+nhl.data.clean1$injstart.day[70] = 4
+nhl.data.clean1$injstart.year[70] = 2017
+
+nhl.data.clean1$injstart.month[2989] = 11
+nhl.data.clean1$injstart.day[2989] = 14
+nhl.data.clean1$injstart.year[2989] = 2017
+
+nhl.data.clean1$injstart.month[1147] = 2
+nhl.data.clean1$injstart.day[1147] = 10
+nhl.data.clean1$injstart.year[1147] = 2010
+
+nhl.data.clean1$injstart.month[1741] = 11
+nhl.data.clean1$injstart.day[1741] = 14
+nhl.data.clean1$injstart.year[1741] = 2016
+
+nhl.data.clean1$injstart.month[2902] = 3
+nhl.data.clean1$injstart.day[2902] = 10
+nhl.data.clean1$injstart.year[2902] = 2012
+
+nhl.data.clean1$injstart.month[2192] = 1
+nhl.data.clean1$injstart.day[2192] = 13
+nhl.data.clean1$injstart.year[2192] = 2007
+
+nhl.data.clean1$injstart.month[3369] = 1
+nhl.data.clean1$injstart.day[3369] = 16
+nhl.data.clean1$injstart.year[3369] = 2016
+
+
+# check to make sure that none of the injury time spans are negative
+start.date = toDate(nhl.data.clean1$injstart.year, nhl.data.clean1$injstart.month, nhl.data.clean1$injstart.day)
+end.date = toDate(nhl.data.clean1$injend.year, nhl.data.clean1$injend.month, nhl.data.clean1$injend.day)
+# check to make sure that none of the dates are negative
+negative = (end.date - start.date) < 0
+# check to make sure that dates look reasonable
+nhl.data.clean1$DaysMissed = as.integer(end.date - start.date) / 86400
+
+
+
+
+
 
 #edge case for missed games: "missed the last regular season game"
-missedlastedgecasereg = grepl("Missed the last regular season|Missed the last game of the regular season", nhl.missed$Injury)
-missedlastedgecaseplay = grepl("first playoff game", nhl.missed$Injury)
+missedlastedgecasereg = grepl("Missed the last regular season|Missed the last game of the regular season", nhl.data.clean1$Injury)
+missedlastedgecaseplay = grepl("first playoff game", nhl.data.clean1$Injury)
 
 missedlastedgecasereg = replace(missedlastedgecasereg, missedlastedgecasereg==TRUE,1)
 missedlastedgecasereg = replace(missedlastedgecasereg, missedlastedgecasereg==FALSE,0)
 missedlastedgecaseplay = replace(missedlastedgecaseplay, missedlastedgecaseplay==TRUE,1)
 missedlastedgecaseplay = replace(missedlastedgecaseplay, missedlastedgecaseplay==FALSE,0)
 
-nhl.missed$games.injured = nhl.missed$games.injured + missedlastedgecasereg + missedlastedgecaseplay
+nhl.data.clean1$games.injured = nhl.data.clean1$games.injured + missedlastedgecasereg + missedlastedgecaseplay
 # edge case: "Missed the last game of the regular season and Game 1, 2 and 3 of Round One against the Toronto Maple Leafs (lower body injury)."
-nhl.data.v2$games.injured[7494] = 4
-nhl.missed$games.injured[3583] = 4
-nhl.missed$games.injured[1024] = 3
-nhl.missed$games.injured[2148] = 3
+nhl.data.clean1$games.injured[3934] = 4
+# Missed Game 1, 2 and 3 of Round Two against the Anaheim Ducks (unknown).
+nhl.data.clean1$games.injured[1114] = 3
+# Missed all 4 games of Round 2 against the Colorado Avalanche and Game 1 of the Conference Final against the Edmonton Oilers (knee injury).
+nhl.data.clean1$games.injured[1256] = 5
 # Missed Game 2 of Round One against the Dallas Stars (head injury).
-nhl.missed$games.injured[3196] = 1
+nhl.data.clean1$games.injured[3508] = 1
 # Missed Game 3, 4 and 5 of the Eastern Conference Finals against the Pittsburgh Penguins (eye injury).
-nhl.missed$games.injured[2002] = 3
+nhl.data.clean1$games.injured[2194] = 3
 # Missed Game 4 of Round Two against the Detroit Red Wings (knee injury).
-nhl.missed$games.injured[1848] = 1
+nhl.data.clean1$games.injured[2022] = 1
 # Missed Game 4 of the Stanley Cup Finals against the Ottawa Senators (abdominal injury).
-nhl.missed$games.injured[2062] = 1
+nhl.data.clean1$games.injured[2264] = 1
 # Missed Game 5, 6 and 7 of Round One against the Vancouver Canucks (upper body injury).
-nhl.missed$games.injured[772] = 3
+nhl.data.clean1$games.injured[844] = 3
 # Missed Game 6 and 7 of Round Two against Toronto (knee injury).
-nhl.missed$games.injured[495] = 2
+nhl.data.clean1$games.injured[539] = 2
 # Missed Game 6 and 7 of Round Two against Toronto (back injury).
-nhl.missed$games.injured[2680] = 2
+nhl.data.clean1$games.injured[2940] = 2
 # Missed all 4 games of Round 2 against the Colorado Avalanche and Game 1 of the Conference Final against the Edmonton Oilers (knee injury).
-nhl.missed$games.injured[1154] = 5
+nhl.data.clean1$games.injured[1256] = 5
 #H1N1 cases
-nhl.missed$games.injured[531] = 2
-nhl.missed$games.injured[3118] = 1
-# Missed all 4 games of Round 2 against the Colorado Avalanche and Game 1 of the Conference Final against the Edmonton Oilers (knee injury).
-nhl.missed$games.injured[1154] = 5
+nhl.data.clean1$games.injured[578] = 2
+nhl.data.clean1$games.injured[3422] = 1
 # Missed 5 games of the Western Conference Finals against the Detroit Red Wings and games 1 and 2 of the Stanley Cup Finals against the Ottawa Senators (broken right hand).
-nhl.missed$games.injured[2061] = 7
+nhl.data.clean1$games.injured[2263] = 7
 # remove rows with visa issues as listed reason for missing games
-nhl.missed = nhl.missed[-grep("visa issues", nhl.missed$Injury),]
+nhl.data.clean1 = nhl.data.clean1[-grep("visa issues", nhl.data.clean1$Injury),]
 
 # remove all rows with "personal" listed as injury
-nhl.missed = nhl.missed[-grep("personal", nhl.missed$Injury),]
+nhl.data.clean1 = nhl.data.clean1[-grep("personal", nhl.data.clean1$Injury),]
 
 
-# categorize general injuries
-nhl.missed$GeneralInjury = nhl.missed$InjuryType
-nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("eye|orbital", nhl.missed$GeneralInjury), "eye")
-nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("head", nhl.missed$GeneralInjury), "head")
-nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("face|nose|nasal|cheek|facial", nhl.missed$GeneralInjury), "face")
-nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("mouth|jaw|oral", nhl.missed$GeneralInjury), "hand")
-nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("neck", nhl.missed$GeneralInjury), "neck")
-
-nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("shoulder", nhl.missed$GeneralInjury), "shoulder")
-nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("upper body|torso", nhl.missed$GeneralInjury), "upper body")
-nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("hand", nhl.missed$GeneralInjury), "hand")
-nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("finger|thumb|knuckle", nhl.missed$GeneralInjury), "finger")
-nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("elbow", nhl.missed$GeneralInjury), "elbow")
-nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("bicep|tricep|muscle", nhl.missed$GeneralInjury), "muscle")
-
-nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("wrist", nhl.missed$GeneralInjury), "wrist")
-nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("arm", nhl.missed$GeneralInjury), "arm")
-nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("back|sacrum", nhl.missed$GeneralInjury), "back")
-nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("collarbone|collar bone|clavicle", nhl.missed$GeneralInjury), "collarbone")
-
-nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("chest|stern", nhl.missed$GeneralInjury), "chest")
-nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("abdom|oblique", nhl.missed$GeneralInjury), "abdominal")
-nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("hip", nhl.missed$GeneralInjury), "hip")
-nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("rib", nhl.missed$GeneralInjury), "rib")
-
-nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("lower body", nhl.missed$GeneralInjury), "lower body")
-nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("knee|ACL|MCL|acl|mcl", nhl.missed$GeneralInjury), "knee")
-nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("sick|flu|cold|virus|H1N1|viral|pneumonia|mono|throat|sinus|illness|food|poison|mumps|rash|leukemia", nhl.missed$GeneralInjury), "cold/virus")
-nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("leg|shin", nhl.missed$GeneralInjury), "leg")
-nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("quad", nhl.missed$GeneralInjury), "quad")
-nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("calf|calves|charley horse", nhl.missed$GeneralInjury), "calf")
-nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("thigh", nhl.missed$GeneralInjury), "thigh")
-nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("groin|cervi", nhl.missed$GeneralInjury), "groin")
-nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("hamstring", nhl.missed$GeneralInjury), "hamstring")
-nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("tibia|fibula", nhl.missed$GeneralInjury), "tibia/fibula")
 
 
-nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("foot|heel", nhl.missed$GeneralInjury), "foot")
-nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("toe", nhl.missed$GeneralInjury), "toe")
-nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("ankle", nhl.missed$GeneralInjury), "ankle")
-nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("achilles", nhl.missed$GeneralInjury), "achilles")
+# categorize general injuries - 45 categories
+nhl.data.clean1$GeneralInjury = nhl.data.clean1$InjuryType
+nhl.data.clean1$GeneralInjury = replace(nhl.data.clean1$GeneralInjury, grep("eye|orbital", nhl.data.clean1$GeneralInjury), "eye")
+nhl.data.clean1$GeneralInjury = replace(nhl.data.clean1$GeneralInjury, grep("head", nhl.data.clean1$GeneralInjury), "head")
+nhl.data.clean1$GeneralInjury = replace(nhl.data.clean1$GeneralInjury, grep("face|nose|nasal|cheek|facial", nhl.data.clean1$GeneralInjury), "face")
+nhl.data.clean1$GeneralInjury = replace(nhl.data.clean1$GeneralInjury, grep("mouth|jaw|oral", nhl.data.clean1$GeneralInjury), "hand")
+nhl.data.clean1$GeneralInjury = replace(nhl.data.clean1$GeneralInjury, grep("neck", nhl.data.clean1$GeneralInjury), "neck")
+
+nhl.data.clean1$GeneralInjury = replace(nhl.data.clean1$GeneralInjury, grep("shoulder", nhl.data.clean1$GeneralInjury), "shoulder")
+nhl.data.clean1$GeneralInjury = replace(nhl.data.clean1$GeneralInjury, grep("upper body|torso", nhl.data.clean1$GeneralInjury), "upper body")
+nhl.data.clean1$GeneralInjury = replace(nhl.data.clean1$GeneralInjury, grep("hand", nhl.data.clean1$GeneralInjury), "hand")
+nhl.data.clean1$GeneralInjury = replace(nhl.data.clean1$GeneralInjury, grep("finger|thumb|knuckle", nhl.data.clean1$GeneralInjury), "finger")
+nhl.data.clean1$GeneralInjury = replace(nhl.data.clean1$GeneralInjury, grep("elbow", nhl.data.clean1$GeneralInjury), "elbow")
+nhl.data.clean1$GeneralInjury = replace(nhl.data.clean1$GeneralInjury, grep("bicep|tricep|muscle", nhl.data.clean1$GeneralInjury), "muscle")
+
+nhl.data.clean1$GeneralInjury = replace(nhl.data.clean1$GeneralInjury, grep("wrist", nhl.data.clean1$GeneralInjury), "wrist")
+nhl.data.clean1$GeneralInjury = replace(nhl.data.clean1$GeneralInjury, grep("arm", nhl.data.clean1$GeneralInjury), "arm")
+nhl.data.clean1$GeneralInjury = replace(nhl.data.clean1$GeneralInjury, grep("back|sacrum", nhl.data.clean1$GeneralInjury), "back")
+nhl.data.clean1$GeneralInjury = replace(nhl.data.clean1$GeneralInjury, grep("collarbone|collar bone|clavicle", nhl.data.clean1$GeneralInjury), "collarbone")
+
+nhl.data.clean1$GeneralInjury = replace(nhl.data.clean1$GeneralInjury, grep("chest|stern", nhl.data.clean1$GeneralInjury), "chest")
+nhl.data.clean1$GeneralInjury = replace(nhl.data.clean1$GeneralInjury, grep("abdom|oblique", nhl.data.clean1$GeneralInjury), "abdominal")
+nhl.data.clean1$GeneralInjury = replace(nhl.data.clean1$GeneralInjury, grep("hip", nhl.data.clean1$GeneralInjury), "hip")
+nhl.data.clean1$GeneralInjury = replace(nhl.data.clean1$GeneralInjury, grep("rib", nhl.data.clean1$GeneralInjury), "rib")
+
+nhl.data.clean1$GeneralInjury = replace(nhl.data.clean1$GeneralInjury, grep("lower body", nhl.data.clean1$GeneralInjury), "lower body")
+nhl.data.clean1$GeneralInjury = replace(nhl.data.clean1$GeneralInjury, grep("knee|ACL|MCL|acl|mcl", nhl.data.clean1$GeneralInjury), "knee")
+nhl.data.clean1$GeneralInjury = replace(nhl.data.clean1$GeneralInjury, grep("sick|flu|cold|virus|H1N1|viral|pneumonia|mono|throat|sinus|illness|food|poison|mumps|rash|leukemia", nhl.data.clean1$GeneralInjury), "cold/virus")
+nhl.data.clean1$GeneralInjury = replace(nhl.data.clean1$GeneralInjury, grep("leg|shin", nhl.data.clean1$GeneralInjury), "leg")
+nhl.data.clean1$GeneralInjury = replace(nhl.data.clean1$GeneralInjury, grep("quad", nhl.data.clean1$GeneralInjury), "quad")
+nhl.data.clean1$GeneralInjury = replace(nhl.data.clean1$GeneralInjury, grep("calf|calves|charley horse", nhl.data.clean1$GeneralInjury), "calf")
+nhl.data.clean1$GeneralInjury = replace(nhl.data.clean1$GeneralInjury, grep("thigh", nhl.data.clean1$GeneralInjury), "thigh")
+nhl.data.clean1$GeneralInjury = replace(nhl.data.clean1$GeneralInjury, grep("groin|cervi", nhl.data.clean1$GeneralInjury), "groin")
+nhl.data.clean1$GeneralInjury = replace(nhl.data.clean1$GeneralInjury, grep("hamstring", nhl.data.clean1$GeneralInjury), "hamstring")
+nhl.data.clean1$GeneralInjury = replace(nhl.data.clean1$GeneralInjury, grep("tibia|fibula", nhl.data.clean1$GeneralInjury), "tibia/fibula")
 
 
-nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("personal", nhl.missed$GeneralInjury), "personal")
-nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("concussion|consussion", nhl.missed$GeneralInjury), "concussion")
-nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("pect", nhl.missed$GeneralInjury), "pectoral")
-nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("append", nhl.missed$GeneralInjury), "appendicitis")
-nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("heart|colon|stomach", nhl.missed$GeneralInjury), "internals")
-nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("sore", nhl.missed$GeneralInjury), "sore")
-nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("hernia", nhl.missed$GeneralInjury), "hernia")
-nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("spleen", nhl.missed$GeneralInjury), "spleen")
-nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("tailbone", nhl.missed$GeneralInjury), "tailbone")
+nhl.data.clean1$GeneralInjury = replace(nhl.data.clean1$GeneralInjury, grep("foot|heel", nhl.data.clean1$GeneralInjury), "foot")
+nhl.data.clean1$GeneralInjury = replace(nhl.data.clean1$GeneralInjury, grep("toe", nhl.data.clean1$GeneralInjury), "toe")
+nhl.data.clean1$GeneralInjury = replace(nhl.data.clean1$GeneralInjury, grep("ankle", nhl.data.clean1$GeneralInjury), "ankle")
+nhl.data.clean1$GeneralInjury = replace(nhl.data.clean1$GeneralInjury, grep("achilles", nhl.data.clean1$GeneralInjury), "achilles")
 
 
-nhl.missed$GeneralInjury = replace(nhl.missed$GeneralInjury, grep("various|blood clots|dizzy|cyst|dehydration", nhl.missed$GeneralInjury), "other")
+nhl.data.clean1$GeneralInjury = replace(nhl.data.clean1$GeneralInjury, grep("personal", nhl.data.clean1$GeneralInjury), "personal")
+nhl.data.clean1$GeneralInjury = replace(nhl.data.clean1$GeneralInjury, grep("concussion|consussion", nhl.data.clean1$GeneralInjury), "concussion")
+nhl.data.clean1$GeneralInjury = replace(nhl.data.clean1$GeneralInjury, grep("pect", nhl.data.clean1$GeneralInjury), "pectoral")
+nhl.data.clean1$GeneralInjury = replace(nhl.data.clean1$GeneralInjury, grep("append", nhl.data.clean1$GeneralInjury), "appendicitis")
+nhl.data.clean1$GeneralInjury = replace(nhl.data.clean1$GeneralInjury, grep("heart|colon|stomach", nhl.data.clean1$GeneralInjury), "internals")
+nhl.data.clean1$GeneralInjury = replace(nhl.data.clean1$GeneralInjury, grep("sore", nhl.data.clean1$GeneralInjury), "sore")
+nhl.data.clean1$GeneralInjury = replace(nhl.data.clean1$GeneralInjury, grep("hernia", nhl.data.clean1$GeneralInjury), "hernia")
+nhl.data.clean1$GeneralInjury = replace(nhl.data.clean1$GeneralInjury, grep("spleen", nhl.data.clean1$GeneralInjury), "spleen")
+nhl.data.clean1$GeneralInjury = replace(nhl.data.clean1$GeneralInjury, grep("tailbone", nhl.data.clean1$GeneralInjury), "tailbone")
 
 
-#reduce number of injury types even more (for visulization purposes)
-nhl.missed$ReducedInjuryTypes = nhl.missed$GeneralInjury
-nhl.missed$ReducedInjuryTypes = replace(nhl.missed$ReducedInjuryTypes, grep("face|head|neck|ear|eye", nhl.missed$ReducedInjuryTypes), "head/neck/face")
-nhl.missed$ReducedInjuryTypes = replace(nhl.missed$ReducedInjuryTypes, grep("upper|shoulder", nhl.missed$ReducedInjuryTypes), "upper body")
-nhl.missed$ReducedInjuryTypes = replace(nhl.missed$ReducedInjuryTypes, grep("abdominal|back|chest|collarbone|mid|spleen|rib", nhl.missed$ReducedInjuryTypes), "mid body")
-nhl.missed$ReducedInjuryTypes = replace(nhl.missed$ReducedInjuryTypes, grep("groin|tailbone|hip|lower", nhl.missed$ReducedInjuryTypes), "lower body")
-nhl.missed$ReducedInjuryTypes = replace(nhl.missed$ReducedInjuryTypes, grep("arm|hand|wrist|finger|elbow", nhl.missed$ReducedInjuryTypes), "arm/hand")
-nhl.missed$ReducedInjuryTypes = replace(nhl.missed$ReducedInjuryTypes, grep("tailbone|calf|knee|leg|tibia/fibula|thigh|hamstring|quad", nhl.missed$ReducedInjuryTypes), "leg")
-nhl.missed$ReducedInjuryTypes = replace(nhl.missed$ReducedInjuryTypes, grep("achilles|ankle", nhl.missed$ReducedInjuryTypes), "foot")
+nhl.data.clean1$GeneralInjury = replace(nhl.data.clean1$GeneralInjury, grep("various|blood clots|dizzy|cyst|dehydration", nhl.data.clean1$GeneralInjury), "other")
 
-nhl.missed$ReducedInjuryTypes = replace(nhl.missed$ReducedInjuryTypes, grep("cold/virus|illness", nhl.missed$ReducedInjuryTypes), "illness")
-nhl.missed$ReducedInjuryTypes = replace(nhl.missed$ReducedInjuryTypes, grep("concussion", nhl.missed$ReducedInjuryTypes), "concussion")
-nhl.missed$ReducedInjuryTypes = replace(nhl.missed$ReducedInjuryTypes, grep("append|hernia|internals|muscle|other|hernia|thyroid|other|unknown|sore|rest|personal", nhl.missed$ReducedInjuryTypes), "other")
+
+#reduce number of injury types even more (for visulization purposes) (10 categories)
+nhl.data.clean1$ReducedInjuryTypes = nhl.data.clean1$GeneralInjury
+nhl.data.clean1$ReducedInjuryTypes = replace(nhl.data.clean1$ReducedInjuryTypes, grep("face|head|neck|ear|eye", nhl.data.clean1$ReducedInjuryTypes), "head/neck/face")
+nhl.data.clean1$ReducedInjuryTypes = replace(nhl.data.clean1$ReducedInjuryTypes, grep("upper|shoulder", nhl.data.clean1$ReducedInjuryTypes), "upper body")
+nhl.data.clean1$ReducedInjuryTypes = replace(nhl.data.clean1$ReducedInjuryTypes, grep("abdominal|back|chest|collarbone|mid|spleen|rib", nhl.data.clean1$ReducedInjuryTypes), "mid body")
+nhl.data.clean1$ReducedInjuryTypes = replace(nhl.data.clean1$ReducedInjuryTypes, grep("groin|tailbone|hip|lower", nhl.data.clean1$ReducedInjuryTypes), "lower body")
+nhl.data.clean1$ReducedInjuryTypes = replace(nhl.data.clean1$ReducedInjuryTypes, grep("arm|hand|wrist|finger|elbow", nhl.data.clean1$ReducedInjuryTypes), "arm/hand")
+nhl.data.clean1$ReducedInjuryTypes = replace(nhl.data.clean1$ReducedInjuryTypes, grep("tailbone|calf|knee|leg|tibia/fibula|thigh|hamstring|quad", nhl.data.clean1$ReducedInjuryTypes), "leg")
+nhl.data.clean1$ReducedInjuryTypes = replace(nhl.data.clean1$ReducedInjuryTypes, grep("achilles|ankle", nhl.data.clean1$ReducedInjuryTypes), "foot")
+
+nhl.data.clean1$ReducedInjuryTypes = replace(nhl.data.clean1$ReducedInjuryTypes, grep("cold/virus|illness", nhl.data.clean1$ReducedInjuryTypes), "illness")
+nhl.data.clean1$ReducedInjuryTypes = replace(nhl.data.clean1$ReducedInjuryTypes, grep("concussion", nhl.data.clean1$ReducedInjuryTypes), "concussion")
+nhl.data.clean1$ReducedInjuryTypes = replace(nhl.data.clean1$ReducedInjuryTypes, grep("append|hernia|internals|muscle|other|hernia|thyroid|other|unknown|sore|rest|personal", nhl.data.clean1$ReducedInjuryTypes), "other")
 
 # unreduced injuries by team
 library(ggplot2)
-ggplot(data=na.omit(nhl.missed), aes(x = TeamName, fill=unlist(GeneralInjury))) + geom_bar() + theme(axis.text.x = element_text(angle = 45, hjust = 1, size=6)) + labs(title="Frequency of Tyes of Injuries per NHL Team",x = "Team", y = "Frequency")
-ggplot(data=na.omit(nhl.missed), aes(x = TeamName, fill=unlist(ReducedInjuryTypes))) + geom_bar() + theme(axis.text.x = element_text(angle = 45, hjust = 1, size=6)) + labs(title="Frequency of Tyes of Injuries per NHL Team",x = "Team", y = "Frequency") + scale_fill_discrete("Injury Type")
+ggplot(data=na.omit(nhl.data.clean1), aes(x = TeamName, fill=unlist(GeneralInjury))) + geom_bar() + theme(axis.text.x = element_text(angle = 45, hjust = 1, size=6)) + labs(title="Frequency of Tyes of Injuries per NHL Team",x = "Team", y = "Frequency")
+ggplot(data=na.omit(nhl.data.clean1), aes(x = TeamName, fill=unlist(ReducedInjuryTypes))) + geom_bar() + theme(axis.text.x = element_text(angle = 45, hjust = 1, size=6)) + labs(title="Frequency of Tyes of Injuries per NHL Team",x = "Team", y = "Frequency") + scale_fill_discrete("Injury Type")
 
+
+write.table(as.matrix(nhl.data.clean1), "Clean-Data/NHL_Clean_V12.txt", sep="\t")
 ```
+
+$\textbf{NOTES:}$
 
 1559 - ""
 dplyr:
@@ -752,3 +1116,16 @@ EDA:
 
 df = df %/% group_by(player_id) %>% arrange(inj.date) %>% 
   mutate(last_inj = lag(inj_data, 1), last_inj_type = lag(inj_type, 1),  next_inj_type = lead(inj_type, 1), ...)
+  
+  
+For next meeting with Sam (week of 3/10):
+1. EDA on injury recurrence (ie. subcat. muscle/ligament/bone, upper/lower/head, etc.)
+2. EDA on time of injury/survival models variables
+3. Multistate and Survival Modeling - look at coefficients
+4. think of how to model injury recurrence
+
+- EDA on full dataset on days elapsed vs. type of injury, position, 
+- injury recurrence - probability of having another injury of some other type
+  - muscle/ligament/bone/etc.
+- Understand model implication sand correct use case (ie. assumptions that are broken when running a test)
+- presenting a better model is a better fit for the problem (multistate vs. survival analysis)
