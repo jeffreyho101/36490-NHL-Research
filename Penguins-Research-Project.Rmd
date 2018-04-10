@@ -593,16 +593,16 @@ injstart.day = nhl.data$day
 injstart.year = nhl.data$year
 
 
-for(i in seq(from=1, to=nrow(nhl.data), by=2)){
+for(i in seq(from=2, to=nrow(nhl.data), by=2)){
   injstart.month[i] = injstart.month[i-1]
   injstart.day[i] = injstart.day[i-1]
   injstart.year[i] = injstart.year[i-1]
 }
 
 # replace with correct date entries
-nhl.data$month = NULL
-nhl.data$day = NULL
-nhl.data$year = NULL
+# nhl.data$month = NULL
+# nhl.data$day = NULL
+# nhl.data$year = NULL
 
 nhl.data$injstart.month = injstart.month
 nhl.data$injstart.day = injstart.day
@@ -1099,18 +1099,21 @@ nhl.data.clean1$HealthyDuration = healthy.duration
 
 ####### FORGOT TO INCLUDE FLAMES DATA IN THE DATASET - FILTERING IT HERE BEFORE MERING #######
 FlamesData.clean2 = read.table("~/Desktop/CMU/36-490/NHL-Research/Clean-Data/FlamesData_V1.txt", sep="\t")
+FlamesData.clean2$InjuryStartDate = as.Date(FlamesData.clean2$InjuryStartDate / 86400, origin = "1970-01-01")
+FlamesData.clean2$InjuryEndDate = as.Date(FlamesData.clean2$InjuryEndDate / 86400, origin = "1970-01-01")
+
 nhl.data.clean1 = merge(nhl.data.clean1, FlamesData.clean2, all=TRUE)
 # fix team name at end
 nhl.data.clean1$City[which(nhl.data.clean1$TeamName == "JERSEYDEVILS")] = "NEW JERSEY"
 nhl.data.clean1$TeamName[which(nhl.data.clean1$TeamName == "JERSEYDEVILS")] = "DEVILS"
 
-write.table(as.matrix(nhl.data.clean1), "Clean-Data/NHL_Clean_V14.txt", sep="\t")
+write.table(as.matrix(nhl.data.clean1), "Clean-Data/NHL_Clean_V15.txt", sep="\t")
 
 
 ```
 
 ```{r message=FALSE, warning=FALSE}
-teamnames = na.omit(unique(nhl.data.clean1$TeamName))
+teamnames = unique(nhl.data.clean1$TeamName)[1:31]
 
 bruins.subset = subset(nhl.data.clean1, TeamName == "BRUINS")
 ggplot(bruins.subset[which(bruins.subset$injstart.year > 2016),]) + 
@@ -1127,10 +1130,16 @@ ggplot(bruins.subset[which(bruins.subset$injstart.year > 2016),]) +
 
 ## Beginning Multi-State Modeling with R msm package
 
-```{r}
+MSM manual: https://cran.r-project.org/web/packages/msm/vignettes/msm-manual.pdf
+
+```{r warning=FALSE}
 library(msm)
-# need to duplicate data points in order to classify date into injury status (ie. injury start date -> injured = 1, injury end date -> injured = 0)
-nhl.data.double = nhl.data.clean1[rep(1:nrow(nhl.data.clean1),each=2),] 
+
+# begin by sorting data by player and chronological order
+nhl.data.ordered = nhl.data.clean1[with(nhl.data.clean1, order(FirstLast, InjuryStartDate)),]
+# need to duplicate data points in order to classify date into injury status (ie. injury start date -> injured = 1, injury end date -> injured = 2)
+nhl.data.double = nhl.data.ordered[rep(1:nrow(nhl.data.ordered),each=2),] 
+
 nhl.data.double$InjuryIndicator = rep(c(1,2), nrow(nhl.data.double) / 2)
 # column for date of entry
 date = nhl.data.double$InjuryStartDate
@@ -1144,6 +1153,11 @@ nhl.data.double$FirstLast = paste(nhl.data.double$Firstname, nhl.data.double$Las
 # time variable for years after 1/1/2000
 nhl.data.double$YearsSince2000 = as.integer(nhl.data.double$InjuryStateDate - toDate(2000,1,1)) / 365
 
+# Set injury type for duplicated Injury to NA if they are not injured
+nhl.data.double$ReducedInjuryTypes[seq(2,nrow(nhl.data.double), by=2)] = NA
+nhl.data.double$GeneralInjury[seq(2,nrow(nhl.data.double), by=2)] = NA
+nhl.data.double$ReducedInjuryTypes = as.character(nhl.data.double$ReducedInjuryTypes)
+nhl.data.double$GeneralInjury = as.character(nhl.data.double$ReducedInjuryTypes)
 
 for(i in 1:nrow(nhl.data.double)){
   nhl.data.double$Index[i] = i
@@ -1158,12 +1172,15 @@ statetable.msm(InjuryIndicator, FirstLast, data=subset(nhl.data.double, TeamName
 # set Q equal to results of statetable.msm
 Q = matrix(c(0,1,1,0), nrow=2,ncol=2, dimnames=list(from=1:2,to=1:2))
 # basic bidirectional model of injury mapping
-cav.msm = msm(InjuryIndicator ~ YearsSince2000, subject=FirstLast, data = nhl.data.double, 
+msm.null = msm(InjuryIndicator ~ YearsSince2000, subject=FirstLast, data = nhl.data.double, 
                qmatrix = Q, deathexact = NULL, exacttimes=TRUE)
 
-# MSM with previously injured as a covariate (0/1 boolean)
-cav.injured.msm = msm(InjuryIndicator ~ YearsSince2000, subject=FirstLast, data = nhl.data.double, 
-               qmatrix = Q, deathexact = NULL, exacttimes=TRUE, covariates = ~PreviouslyInjured)
+msm.previnjured = msm(InjuryIndicator ~ YearsSince2000, subject=FirstLast, data = nhl.data.double, 
+               qmatrix = Q, deathexact = NULL, exacttimes=TRUE, covariates = ~ PreviouslyInjured)
+
+msm.previnjured.injury = msm(InjuryIndicator ~ YearsSince2000, subject=FirstLast, data = nhl.data.double, 
+               qmatrix = Q, deathexact = NULL, exacttimes=TRUE, 
+               covariates = list("1-2" = ~ PreviouslyInjured +  GeneralInjury, "2-1" = ~ PreviouslyInjured))
 
 
 ```
@@ -1171,10 +1188,6 @@ cav.injured.msm = msm(InjuryIndicator ~ YearsSince2000, subject=FirstLast, data 
 
 $\textbf{NOTES:}$
 
-1559 - ""
-dplyr:
-- lead(df, var, )
-- lag()
 
 EDA:
 - dist. of games/days missed
@@ -1196,3 +1209,9 @@ For next meeting with Sam (week of 3/10):
   - muscle/ligament/bone/etc.
 - Understand model implications and correct use case (ie. assumptions that are broken when running a test)
 - presenting a better model is a better fit for the problem (multistate vs. survival analysis)
+
+Tidyr - gather/spread
+https://cran.r-project.org/web/packages/tidyr/tidyr.pdf
+
+- only have data modeled after a player has alrady been injured
+- lubridate - dates
