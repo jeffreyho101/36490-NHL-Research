@@ -403,6 +403,9 @@ SenatorsData=multmerge(Senators)
 SharksData=multmerge(Sharks)
 StarsData=multmerge(Stars)
 WildData=multmerge(Wild)
+```
+
+```{r message=FALSE, warning=FALSE}
 
 
 datalist = c(
@@ -970,6 +973,8 @@ end.date = toDate(nhl.data.clean1$injend.year, nhl.data.clean1$injend.month, nhl
 negative = (end.date - start.date) < 0
 # check to make sure that dates look reasonable
 nhl.data.clean1$DaysMissed = as.integer(end.date - start.date) / 86400
+nhl.data.clean1$InjuryStartDate = start.date
+nhl.data.clean1$InjuryEndDate = end.date
 
 
 
@@ -1027,7 +1032,7 @@ nhl.data.clean1$GeneralInjury = nhl.data.clean1$InjuryType
 nhl.data.clean1$GeneralInjury = replace(nhl.data.clean1$GeneralInjury, grep("eye|orbital", nhl.data.clean1$GeneralInjury), "eye")
 nhl.data.clean1$GeneralInjury = replace(nhl.data.clean1$GeneralInjury, grep("head", nhl.data.clean1$GeneralInjury), "head")
 nhl.data.clean1$GeneralInjury = replace(nhl.data.clean1$GeneralInjury, grep("face|nose|nasal|cheek|facial", nhl.data.clean1$GeneralInjury), "face")
-nhl.data.clean1$GeneralInjury = replace(nhl.data.clean1$GeneralInjury, grep("mouth|jaw|oral", nhl.data.clean1$GeneralInjury), "hand")
+nhl.data.clean1$GeneralInjury = replace(nhl.data.clean1$GeneralInjury, grep("mouth|jaw|oral", nhl.data.clean1$GeneralInjury), "mouth")
 nhl.data.clean1$GeneralInjury = replace(nhl.data.clean1$GeneralInjury, grep("neck", nhl.data.clean1$GeneralInjury), "neck")
 
 nhl.data.clean1$GeneralInjury = replace(nhl.data.clean1$GeneralInjury, grep("shoulder", nhl.data.clean1$GeneralInjury), "shoulder")
@@ -1098,9 +1103,78 @@ library(ggplot2)
 ggplot(data=na.omit(nhl.data.clean1), aes(x = TeamName, fill=unlist(GeneralInjury))) + geom_bar() + theme(axis.text.x = element_text(angle = 45, hjust = 1, size=6)) + labs(title="Frequency of Tyes of Injuries per NHL Team",x = "Team", y = "Frequency")
 ggplot(data=na.omit(nhl.data.clean1), aes(x = TeamName, fill=unlist(ReducedInjuryTypes))) + geom_bar() + theme(axis.text.x = element_text(angle = 45, hjust = 1, size=6)) + labs(title="Frequency of Tyes of Injuries per NHL Team",x = "Team", y = "Frequency") + scale_fill_discrete("Injury Type")
 
+# extra - get unique player identifier by merging first and last names
+nhl.data.clean1$FirstLast = paste(nhl.data.clean1$Firstname, nhl.data.clean1$Lastname, sep=" ")
 
-write.table(as.matrix(nhl.data.clean1), "Clean-Data/NHL_Clean_V12.txt", sep="\t")
+# reset indices one last time for this dataset
+for(i in 1:nrow(nhl.data.clean1)){
+  nhl.data.clean1$Index[i] = i
+}
+# First Injury per Player
+t.first <- nhl.data.clean1[match(unique(nhl.data.clean1$FirstLast), nhl.data.clean1$FirstLast),]$Index
+previously.injured = rep(1,nrow(nhl.data.clean1))
+previously.injured[t.first] = 0
+nhl.data.clean1$PreviouslyInjured = previously.injured
+
+
+
+# get days since last injury
+healthy.duration = rep(NA, nrow(nhl.data.clean1))
+
+for(i in 1:(nrow(nhl.data.clean1)-1)){
+  if((nhl.data.clean1$Lastname[i] == nhl.data.clean1$Lastname[i+1]) && (nhl.data.clean1$Firstname[i] == nhl.data.clean1$Firstname[i+1])){
+    healthy.duration[i] = nhl.data.clean1$InjuryStartDate[i+1] - nhl.data.clean1$InjuryEndDate[i]
+  }
+}
+nhl.data.clean1$HealthyDuration = healthy.duration
+write.table(as.matrix(nhl.data.clean1), "Clean-Data/NHL_Clean_V13.txt", sep="\t")
+
 ```
+
+
+## Beginning Multi-State Modeling with R msm package
+
+```{r}
+library(msm)
+# need to duplicate data points in order to classify date into injury status (ie. injury start date -> injured = 1, injury end date -> injured = 0)
+nhl.data.double = nhl.data.clean1[rep(1:nrow(nhl.data.clean1),each=2),] 
+nhl.data.double$InjuryIndicator = rep(c(1,2), nrow(nhl.data.double) / 2)
+# column for date of entry
+date = nhl.data.double$InjuryStartDate
+for(i in seq(from=2, to=nrow(nhl.data.double), by=2)){
+#  stuff, such as
+  date[i] = nhl.data.double$InjuryEndDate[i]
+}
+nhl.data.double$InjuryStateDate = date
+nhl.data.double$FirstLast = paste(nhl.data.double$Firstname, nhl.data.double$Lastname, sep=" ")
+
+# time variable for years after 1/1/2000
+nhl.data.double$YearsSince2000 = as.integer(nhl.data.double$InjuryStateDate - toDate(2000,1,1)) / 365
+
+
+for(i in 1:nrow(nhl.data.double)){
+  nhl.data.double$Index[i] = i
+}
+# A useful way to summarise multi-state data is as a frequency table of pairs of consecutive states.
+# counts over all individuals, for each state r and s, the number of times an individual had an
+# observation of state r followed by an observation of state s. The function statetable.msm can
+# be used to produce such a table, as follows
+
+# state table of MSM for Penguins players
+statetable.msm(InjuryIndicator, FirstLast, data=subset(nhl.data.double, TeamName == "PENGUINS"))
+# set Q equal to results of statetable.msm
+Q = matrix(c(0,1,1,0), nrow=2,ncol=2, dimnames=list(from=1:2,to=1:2))
+# basic bidirectional model of injury mapping
+cav.msm = msm(InjuryIndicator ~ YearsSince2000, subject=FirstLast, data = nhl.data.double, 
+               qmatrix = Q, deathexact = NULL, exacttimes=TRUE)
+
+# MSM with previously injured as a covariate (0/1 boolean)
+cav.injured.msm = msm(InjuryIndicator ~ YearsSince2000, subject=FirstLast, data = nhl.data.double, 
+               qmatrix = Q, deathexact = NULL, exacttimes=TRUE, covariates = ~PreviouslyInjured)
+
+
+```
+
 
 $\textbf{NOTES:}$
 
@@ -1127,5 +1201,5 @@ For next meeting with Sam (week of 3/10):
 - EDA on full dataset on days elapsed vs. type of injury, position, 
 - injury recurrence - probability of having another injury of some other type
   - muscle/ligament/bone/etc.
-- Understand model implication sand correct use case (ie. assumptions that are broken when running a test)
+- Understand model implications and correct use case (ie. assumptions that are broken when running a test)
 - presenting a better model is a better fit for the problem (multistate vs. survival analysis)
