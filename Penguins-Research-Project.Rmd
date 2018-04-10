@@ -383,7 +383,7 @@ CapitalsData=multmerge(Capitals)
 CoyotesData=multmerge(Coyotes)
 FlyersData=multmerge(Flyers)
 DevilsData=multmerge(Devils)
-FlamesData=multmerge(Bruins)
+FlamesData=multmerge(Flames)
 DucksData=multmerge(Ducks)
 GoldenKnightsData=multmerge(GoldenKnights)
 HurricanesData=multmerge(Hurricanes)
@@ -405,40 +405,7 @@ StarsData=multmerge(Stars)
 WildData=multmerge(Wild)
 ```
 
-```{r message=FALSE, warning=FALSE}
-
-
-datalist = c(
-BlackhawksData,
-BlueJacketsData,
-BluesData,
-BruinsData,
-CanadiensData,
-CanucksData,
-CapitalsData,
-CoyotesData,
-FlyersData,
-DevilsData,
-FlamesData,
-DucksData,
-GoldenKnightsData,
-HurricanesData,
-IslandersData,
-JetsData,
-KingsData,
-LightningData,
-MapleLeafsData,
-OilersData,
-PanthersData,
-PenguinsData,
-PredatorsData,
-RangersData,
-RedWingsData,
-SabresData,
-SenatorsData,
-SharksData,
-StarsData,
-WildData)
+```{r message=FALSE, warning=FALSE, fig.height=11, fig.width = 9}
 
 nhl.data = AvalancheData
 nhl.data = merge(nhl.data, BlackhawksData, all=TRUE)
@@ -451,7 +418,6 @@ nhl.data = merge(nhl.data, CapitalsData, all=TRUE)
 nhl.data = merge(nhl.data, CoyotesData, all=TRUE)
 nhl.data = merge(nhl.data, DevilsData, all=TRUE)
 nhl.data = merge(nhl.data, DucksData, all=TRUE)
-nhl.data = merge(nhl.data, FlamesData, all=TRUE)
 nhl.data = merge(nhl.data, FlyersData, all=TRUE)
 nhl.data = merge(nhl.data, GoldenKnightsData, all=TRUE)
 nhl.data = merge(nhl.data, HurricanesData, all=TRUE)
@@ -471,6 +437,7 @@ nhl.data = merge(nhl.data, SenatorsData, all=TRUE)
 nhl.data = merge(nhl.data, SharksData, all=TRUE)
 nhl.data = merge(nhl.data, StarsData, all=TRUE)
 nhl.data = merge(nhl.data, WildData, all=TRUE)
+
 
 # get date info from string
 nhl.data$year = substr(nhl.data$Date, 9, 12)
@@ -1024,7 +991,8 @@ nhl.data.clean1 = nhl.data.clean1[-grep("visa issues", nhl.data.clean1$Injury),]
 # remove all rows with "personal" listed as injury
 nhl.data.clean1 = nhl.data.clean1[-grep("personal", nhl.data.clean1$Injury),]
 
-
+####### FORGOT TO INCLUDE FLAMES DATA IN THE DATASET - FILTERING IT HERE BEFORE MERING #######
+# nhl.data = merge(nhl.data, FlamesData, all=TRUE)
 
 
 # categorize general injuries - 45 categories
@@ -1127,8 +1095,25 @@ for(i in 1:(nrow(nhl.data.clean1)-1)){
   }
 }
 nhl.data.clean1$HealthyDuration = healthy.duration
+
+
 write.table(as.matrix(nhl.data.clean1), "Clean-Data/NHL_Clean_V13.txt", sep="\t")
 
+```
+
+```{r message=FALSE, warning=FALSE}
+teamnames = na.omit(unique(nhl.data.clean1$TeamName))
+
+bruins.subset = subset(nhl.data.clean1, TeamName == "BRUINS")
+ggplot(bruins.subset[which(bruins.subset$injstart.year > 2016),]) + 
+  geom_point(aes(x=InjuryStartDate,y=Lastname), col="red") + 
+  geom_point(aes(x=InjuryEndDate,y=Lastname), col="green") + 
+  geom_segment(aes(x=InjuryStartDate,y=Lastname, xend=InjuryEndDate, yend=Lastname)) + 
+  labs(
+    title="Bruins' Injury History since 2016",
+    x="Time (Year)",
+    y="Player"
+  ) 
 ```
 
 
