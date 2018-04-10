@@ -593,7 +593,7 @@ injstart.day = nhl.data$day
 injstart.year = nhl.data$year
 
 
-for(i in seq(from=2, to=nrow(nhl.data), by=2)){
+for(i in seq(from=1, to=nrow(nhl.data), by=2)){
   injstart.month[i] = injstart.month[i-1]
   injstart.day[i] = injstart.day[i-1]
   injstart.year[i] = injstart.year[i-1]
@@ -939,7 +939,7 @@ end.date = toDate(nhl.data.clean1$injend.year, nhl.data.clean1$injend.month, nhl
 # check to make sure that none of the dates are negative
 negative = (end.date - start.date) < 0
 # check to make sure that dates look reasonable
-nhl.data.clean1$DaysMissed = as.integer(end.date - start.date) / 86400
+nhl.data.clean1$DaysMissed = as.integer(end.date - start.date)
 nhl.data.clean1$InjuryStartDate = start.date
 nhl.data.clean1$InjuryEndDate = end.date
 
@@ -990,9 +990,6 @@ nhl.data.clean1 = nhl.data.clean1[-grep("visa issues", nhl.data.clean1$Injury),]
 
 # remove all rows with "personal" listed as injury
 nhl.data.clean1 = nhl.data.clean1[-grep("personal", nhl.data.clean1$Injury),]
-
-####### FORGOT TO INCLUDE FLAMES DATA IN THE DATASET - FILTERING IT HERE BEFORE MERING #######
-# nhl.data = merge(nhl.data, FlamesData, all=TRUE)
 
 
 # categorize general injuries - 45 categories
@@ -1097,7 +1094,18 @@ for(i in 1:(nrow(nhl.data.clean1)-1)){
 nhl.data.clean1$HealthyDuration = healthy.duration
 
 
-write.table(as.matrix(nhl.data.clean1), "Clean-Data/NHL_Clean_V13.txt", sep="\t")
+
+
+
+####### FORGOT TO INCLUDE FLAMES DATA IN THE DATASET - FILTERING IT HERE BEFORE MERING #######
+FlamesData.clean2 = read.table("~/Desktop/CMU/36-490/NHL-Research/Clean-Data/FlamesData_V1.txt", sep="\t")
+nhl.data.clean1 = merge(nhl.data.clean1, FlamesData.clean2, all=TRUE)
+# fix team name at end
+nhl.data.clean1$City[which(nhl.data.clean1$TeamName == "JERSEYDEVILS")] = "NEW JERSEY"
+nhl.data.clean1$TeamName[which(nhl.data.clean1$TeamName == "JERSEYDEVILS")] = "DEVILS"
+
+write.table(as.matrix(nhl.data.clean1), "Clean-Data/NHL_Clean_V14.txt", sep="\t")
+
 
 ```
 
