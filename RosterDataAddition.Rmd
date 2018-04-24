@@ -1,0 +1,89 @@
+---
+title: "RosterParsing"
+author: "Jeffrey Ho"
+date: "4/23/2018"
+output: html_document
+---
+
+```{r}
+library(jsonlite)
+Avalanche = fromJSON("~/Desktop/CMU/36-490/NHL-Research/RosterJSON/avalanche-roster.json")
+Blackhawks = fromJSON("~/Desktop/CMU/36-490/NHL-Research/RosterJSON/blackhawks-roster.json")
+BlueJackets = fromJSON("~/Desktop/CMU/36-490/NHL-Research/RosterJSON/bluejackets-roster.json")
+Blues = fromJSON("~/Desktop/CMU/36-490/NHL-Research/RosterJSON/blues-roster.json")
+Bruins = fromJSON("~/Desktop/CMU/36-490/NHL-Research/RosterJSON/bruins-roster.json")
+Canadiens = fromJSON("~/Desktop/CMU/36-490/NHL-Research/RosterJSON/canadiens-roster.json")
+Canucks = fromJSON("~/Desktop/CMU/36-490/NHL-Research/RosterJSON/canucks-roster.json")
+Capitals = fromJSON("~/Desktop/CMU/36-490/NHL-Research/RosterJSON/capitals-roster.json")
+Coyotes = fromJSON("~/Desktop/CMU/36-490/NHL-Research/RosterJSON/coyotes-roster.json")
+Devils = fromJSON("~/Desktop/CMU/36-490/NHL-Research/RosterJSON/devils-roster.json")
+Ducks = fromJSON("~/Desktop/CMU/36-490/NHL-Research/RosterJSON/ducks-roster.json")
+Flames = fromJSON("~/Desktop/CMU/36-490/NHL-Research/RosterJSON/flames-roster.json")
+Flyers = fromJSON("~/Desktop/CMU/36-490/NHL-Research/RosterJSON/flyers-roster.json")
+GoldenKnights = fromJSON("~/Desktop/CMU/36-490/NHL-Research/RosterJSON/goldenknights-roster.json")
+Hurricanes = fromJSON("~/Desktop/CMU/36-490/NHL-Research/RosterJSON/hurricanes-roster.json")
+Islanders = fromJSON("~/Desktop/CMU/36-490/NHL-Research/RosterJSON/islanders-roster.json")
+Jets = fromJSON("~/Desktop/CMU/36-490/NHL-Research/RosterJSON/jets-roster.json")
+Kings = fromJSON("~/Desktop/CMU/36-490/NHL-Research/RosterJSON/kings-roster.json")
+Lightning = fromJSON("~/Desktop/CMU/36-490/NHL-Research/RosterJSON/lightning-roster.json")
+MapleLeafs = fromJSON("~/Desktop/CMU/36-490/NHL-Research/RosterJSON/mapleleafs-roster.json")
+Oilers = fromJSON("~/Desktop/CMU/36-490/NHL-Research/RosterJSON/oilers-roster.json")
+Panthers = fromJSON("~/Desktop/CMU/36-490/NHL-Research/RosterJSON/panthers-roster.json")
+Penguins = fromJSON("~/Desktop/CMU/36-490/NHL-Research/RosterJSON/penguins-roster.json")
+Predators = fromJSON("~/Desktop/CMU/36-490/NHL-Research/RosterJSON/predators-roster.json")
+Rangers = fromJSON("~/Desktop/CMU/36-490/NHL-Research/RosterJSON/rangers-roster.json")
+RedWings = fromJSON("~/Desktop/CMU/36-490/NHL-Research/RosterJSON/redwings-roster.json")
+Sabres = fromJSON("~/Desktop/CMU/36-490/NHL-Research/RosterJSON/sabres-roster.json")
+Senators = fromJSON("~/Desktop/CMU/36-490/NHL-Research/RosterJSON/senators-roster.json")
+Sharks = fromJSON("~/Desktop/CMU/36-490/NHL-Research/RosterJSON/sharks-roster.json")
+Stars = fromJSON("~/Desktop/CMU/36-490/NHL-Research/RosterJSON/stars-roster.json")
+Wild = fromJSON("~/Desktop/CMU/36-490/NHL-Research/RosterJSON/wild-roster.json")
+
+
+rosterdata = Avalanche
+rosterdata = merge(rosterdata, Blackhawks, all=TRUE)
+rosterdata = merge(rosterdata, BlueJackets, all=TRUE)
+rosterdata = merge(rosterdata, Blues, all=TRUE)
+rosterdata = merge(rosterdata, Bruins, all=TRUE)
+rosterdata = merge(rosterdata, Canadiens, all=TRUE)
+rosterdata = merge(rosterdata, Canucks, all=TRUE)
+rosterdata = merge(rosterdata, Capitals, all=TRUE)
+rosterdata = merge(rosterdata, Coyotes, all=TRUE)
+rosterdata = merge(rosterdata, Devils, all=TRUE)
+rosterdata = merge(rosterdata, Ducks, all=TRUE)
+rosterdata = merge(rosterdata, Flyers, all=TRUE)
+rosterdata = merge(rosterdata, GoldenKnights, all=TRUE)
+rosterdata = merge(rosterdata, Hurricanes, all=TRUE)
+rosterdata = merge(rosterdata, Islanders, all=TRUE)
+rosterdata = merge(rosterdata, Jets, all=TRUE)
+rosterdata = merge(rosterdata, Kings, all=TRUE)
+rosterdata = merge(rosterdata, Lightning, all=TRUE)
+rosterdata = merge(rosterdata, MapleLeafs, all=TRUE)
+rosterdata = merge(rosterdata, Oilers, all=TRUE)
+rosterdata = merge(rosterdata, Panthers, all=TRUE)
+rosterdata = merge(rosterdata, Penguins, all=TRUE)
+rosterdata = merge(rosterdata, Predators, all=TRUE)
+rosterdata = merge(rosterdata, Rangers, all=TRUE)
+rosterdata = merge(rosterdata, RedWings, all=TRUE)
+rosterdata = merge(rosterdata, Sabres, all=TRUE)
+rosterdata = merge(rosterdata, Senators, all=TRUE)
+rosterdata = merge(rosterdata, Sharks, all=TRUE)
+rosterdata = merge(rosterdata, Stars, all=TRUE)
+rosterdata = merge(rosterdata, Wild, all=TRUE)
+
+rosterdata$Image = NULL
+rosterdata$CurrentTeam = NULL
+rosterdata$SeoId = NULL
+
+
+rosterdata$Weight = as.integer(substr(rosterdata$Weight,1,3))
+rosterdata$BirthYear = as.integer(substr(rosterdata$DateOfBirth,1,4))
+rosterdata$BirthMonth = as.integer(substr(rosterdata$DateOfBirth,6,7))
+rosterdata$BirthDay = as.integer(substr(rosterdata$DateOfBirth,9,10))
+
+
+rosterdata$FirstName = toupper(rosterdata$FirstName)
+rosterdata$LastName = toupper(rosterdata$LastName)
+
+```
+
