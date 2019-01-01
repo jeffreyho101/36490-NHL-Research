@@ -15,8 +15,9 @@ Penguins-Research-Project.rmd contains source code that takes player data and fi
 * Data Analysis: R/RStudio Interface
 * Data Source: TSN.ca - NHL Player Bios
 
+### Awards
+* 2nd Place - Statistics, Carnegie Mellon Meeting of the Minds Symposium
+* 2nd Place, Poster, Tartan Sports Analytics Competition
 
 
-
-* Note: Continuous work will be done on this project throughout the Spring 2018 semester
-
+*For more info regarding project specifics, including paper and poster presentation, contact Jeffrey Ho (jmho [at] andrew [dot] cmu [dot] edu*
